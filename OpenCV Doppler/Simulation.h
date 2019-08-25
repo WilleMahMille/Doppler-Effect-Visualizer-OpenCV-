@@ -29,7 +29,7 @@ private:
 class WaveSource {
 friend class WaveSimulation;
 public:
-	WaveSource(cv::Point position, cv::Point sourceSpeed = cv::Point(0, 0), cv::Point cameraSpeed = cv::Point(0, 0), int wavedelay = 1000, int waveLifetime = 3000) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveDelay(wavedelay), _waveLifetime(waveLifetime) {
+	WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed = cv::Point(0, 0), cv::Point cameraSpeed = cv::Point(0, 0), int wavedelay = 1000, int waveLifetime = 3000) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveDelay(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
 	}
 
 	inline void SetSourceSpeed(cv::Point sourceSpeed) { _sourceSpeed = sourceSpeed; }
@@ -43,9 +43,9 @@ private:
 	const cv::Scalar WaveColor = cv::Scalar(255, 200, 100);
 
 	cv::Point _position, _sourceSpeed, _cameraSpeed;
+	cv::Point _screenSize;
 	int reverseX = 0, reverseY = 0;
-	int _waveDelay, currentWaveDelay = 0;
-	int _waveLifetime, _waveSpeed = 5;
+	int _waveDelay, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5, waveBounces = 0;
 	std::vector<Wave> waves;
 
 	void UpdatePositions();
@@ -61,7 +61,6 @@ public:
 
 	void SetCameraSpeed(cv::Point speed);
 	void RunSimulation();
-	void UpdateWaveSpeed(int, void*){ ws->_waveSpeed = ws->_waveSpeed > 0 ? ws->_waveSpeed : 1; }
 
 private:
 
