@@ -66,20 +66,21 @@ void WaveSource::Draw(cv::Mat img) {
 	}
 }
 void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime, int* waveBounes) {
-	
-	cv::createTrackbar("Source Speed X", "WaveSimulation", sourceSpeedX, 50);
-	cv::createTrackbar("Reverse X Speed", "WaveSimulation", reverseX, 1);
-	cv::createTrackbar("Wave Source Speed Y", "WaveSimulation", sourceSpeedY, 50);
-	cv::createTrackbar("Reverse Y Speed", "WaveSimulation", reverseY, 1);
-	cv::createTrackbar("Wave Spawn Delay", "WaveSimulation", waveDelay, 5000);
-	cv::createTrackbar("Wave Speed", "WaveSimulation", waveSpeed, 75);
-	cv::createTrackbar("Wave Lifetime", "WaveSimulation", waveLifetime, 10000);
-	cv::createTrackbar("Wave Bounces", "WaveSimulation", waveBounes, 5);
+	const char* commandWindowName = "Control Panel";
+
+	cv::namedWindow(commandWindowName, cv::WINDOW_FREERATIO);
+	cv::resizeWindow(commandWindowName, cv::Size(500, 500));
+	cv::createTrackbar("Source Speed X", commandWindowName, sourceSpeedX, 50);
+	cv::createTrackbar("Reverse X Speed", commandWindowName, reverseX, 1);
+	cv::createTrackbar("Wave Source Speed Y", commandWindowName, sourceSpeedY, 50);
+	cv::createTrackbar("Reverse Y Speed", commandWindowName, reverseY, 1);
+	cv::createTrackbar("Wave Spawn Delay", commandWindowName, waveDelay, 5000);
+	cv::createTrackbar("Wave Speed", commandWindowName, waveSpeed, 75);
+	cv::createTrackbar("Wave Lifetime", commandWindowName, waveLifetime, 10000);
+	cv::createTrackbar("Wave Bounces", commandWindowName, waveBounes, 5);
 
 }
 WaveSimulation::WaveSimulation() {
-	cv::namedWindow("WaveSimulation", cv::WINDOW_FREERATIO);
-	cv::resizeWindow("WaveSimulation", cv::Size(500, 500));
 	ws = new WaveSource(cv::Point(100, 400), cv::Point(1900, 1000));
 	CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveDelay, &ws->_waveSpeed, &ws->_waveLifetime, &ws->waveBounces);
 }
