@@ -3,6 +3,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include "Resources.h"
 
 class ControlPanel;
 
@@ -28,14 +29,14 @@ private:
 class TwoDTrackbar { // : UserInput
 	friend ControlPanel;
 private:
-	TwoDTrackbar(cv::Point position, cv::Point size);
+	TwoDTrackbar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, cv::Mat selector);
 	bool IsClicked(cv::Point click);
 	void Draw(cv::Mat img);
 	void Update();
-	int* valOne, *valTwo;
+	double *valOne, *valTwo;
 	bool lockX, lockY;
 	cv::Mat trackbarImg, selector;
-	cv::Point _position, _size;
+	cv::Point _position, _size, _bottomNumber, _scale; //scale is numbers per pixel
 
 };
 
@@ -51,10 +52,11 @@ public:
 	const char* GetWindowName() { return _windowName; }
 	int GetTopLayer() { return inputs.size(); }
 	cv::Size GetSize() { return _size; }
+	cv::Mat GetDesign() { return _design; }
 
-	void Test();
 private:
 	const char* _windowName;
 	std::vector<UserInput*> inputs;
 	cv::Size _size;
+	cv::Mat _design;
 };

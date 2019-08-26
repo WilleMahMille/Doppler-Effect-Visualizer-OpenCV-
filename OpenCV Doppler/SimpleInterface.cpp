@@ -1,23 +1,7 @@
 #include "SimpleInterface.h"
 #include <Windows.h>
 
-std::string GetWorkingDir() {
-	char buf[256];
-	GetCurrentDirectoryA(256, buf);
-	return std::string(buf);
-}
-cv::Mat LoadImg(const char* imgName) {
-	cv::String workingDir = GetWorkingDir() + "\\";
-	cv::Mat img = cv::imread(workingDir + imgName);
-	if (img.empty()) {
-		img = cv::imread(workingDir + "..\\x64\\Debug\\" + imgName);
-		if (img.empty()) {
-			std::cout << "Image does not exist\n";
-			img = cv::Mat::zeros(cv::Size(1, 1), CV_8UC3);
-		}
-	}
-	return img;
-}
+
 void OnMouseClick(int evnt, int x, int y, int flags, void* userData) {
 	if (flags == cv::EVENT_FLAG_LBUTTON || evnt == cv::EVENT_LBUTTONUP ) {
 
@@ -29,11 +13,11 @@ void OnMouseClick(int evnt, int x, int y, int flags, void* userData) {
 CheckBox::CheckBox(cv::Point position, bool* value) : _position(position), _value(value) {
 	_size = cv::Point(50, 50);
 	_checkedImg = cv::Mat::zeros(cv::Size(50, 50), CV_8UC3);
-	cv::resize(LoadImg("checked.png"), _checkedImg, cv::Size(50, 50));
+	cv::resize(Resources::LoadImg("checked.png"), _checkedImg, cv::Size(50, 50));
 	//cv::Mat insetImg(img, cv::Rect(_position.x, _position.y, _position.x + _size.x, _position.y + _size.y));
 	
 	_uncheckedImg = cv::Mat::zeros(cv::Size(50, 50), CV_8UC3);
-	cv::resize(LoadImg("unchecked.png"), _uncheckedImg, cv::Size(50, 50));
+	cv::resize(Resources::LoadImg("unchecked.png"), _uncheckedImg, cv::Size(50, 50));
 }
 bool CheckBox::IsClicked(cv::Point click) {
 	return (click.x >= _position.x && click.x <= _position.x + _size.x && click.y >= _position.y && click.y <= _position.y + _size.y);
@@ -53,6 +37,11 @@ void CheckBox::Draw(cv::Mat img) {
 void CheckBox::Click(cv::Point position, int type) {
 	*_value = type == cv::EVENT_LBUTTONUP ? !*_value : *_value;
 }
+
+TwoDTrackbar::TwoDTrackbar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, cv::Mat selector) : _position(position), _size(size), _bottomNumber(bottomNumber) {
+	_scale = cv::Point((topNumber.x - bottomNumber.x) / size.x, (topNumber.y - bottomNumber.y) / size.y);
+}
+
 void TwoDTrackbar::Draw(cv::Mat img) {
 
 }
@@ -87,8 +76,4 @@ void ControlPanel::AddCheckBox(cv::Point position, int layer, bool* value) {
 	inputs.insert(inputs.begin() + layer, new CheckBox(position, value));
 }
 
-
-void ControlPanel::Test(){
-
-}
 
