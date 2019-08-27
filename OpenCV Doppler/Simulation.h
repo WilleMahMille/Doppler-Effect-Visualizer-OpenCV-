@@ -59,12 +59,12 @@ private:
 class WaveSimulation {
 public:
 	WaveSimulation();
-
+	
 	void SetCameraSpeed(cv::Point speed);
 	void RunSimulation();
 
 private:
-
+	ControlPanel* ctrlP;
 	WaveSource* ws;
 	cv::Point _cameraSpeed;
 };
