@@ -11,11 +11,11 @@ public:
 	Wave(cv::Point speed, cv::Point position, int sizeIncrease, int lifetime);
 	void Frame();
 
-	inline void SetSizeIncrease(float sizeIncrease) { _sizeIncrease = sizeIncrease; }
-	inline void SetSpeed(cv::Point speed) { _speed = speed; }
-	inline void LifetimeDecrease(int FrameDelay) { _lifetime -= FrameDelay; }
-	inline inline bool IsDead() { return _lifetime <= 0; }
-	inline void Draw(cv::Mat img, cv::Scalar WaveColor) { cv::circle(img, _position, _size / 2, WaveColor);	}
+	void SetSizeIncrease(int sizeIncrease) { _sizeIncrease = sizeIncrease; }
+	void SetSpeed(cv::Point speed) { _speed = speed; }
+	void LifetimeDecrease(int FrameDelay) { _lifetime -= FrameDelay; }
+	bool IsDead() { return _lifetime <= 0; }
+	void Draw(cv::Mat img, cv::Scalar WaveColor) { cv::circle(img, _position, _size / 2, WaveColor);	}
 
 private:
 
@@ -35,7 +35,7 @@ public:
 
 	inline void SetSourceSpeed(cv::Point sourceSpeed) { _sourceSpeed = sourceSpeed; }
 	inline void SetCameraSpeed(cv::Point cameraSpeed) { _cameraSpeed = cameraSpeed; }
-	void SetWaveSizeIncrease(float newIncrease);
+	void SetWaveSizeIncrease(int newIncrease);
 	void Frame(cv::Mat img);
 
 private:

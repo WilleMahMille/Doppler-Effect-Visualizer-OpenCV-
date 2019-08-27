@@ -10,7 +10,7 @@ void Wave::Frame() {
 	ApplySpeed();
 }
 
-void WaveSource::SetWaveSizeIncrease(float newIncrease) {
+void WaveSource::SetWaveSizeIncrease(int newIncrease) {
 	for (int i = 0; i < waves.size(); i++) {
 		waves[i].SetSizeIncrease(newIncrease);
 	}
