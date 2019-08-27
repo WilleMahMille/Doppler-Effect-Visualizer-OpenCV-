@@ -17,7 +17,7 @@ public:
 class CheckBox : UserInput {
 	friend ControlPanel;
 private:
-	CheckBox(cv::Point position, bool* value);
+	CheckBox(cv::Point position, cv::Point size, bool* value);
 	bool IsClicked(cv::Point click);
 	void Draw(cv::Mat img);
 	void Click(cv::Point position, int type);
@@ -26,14 +26,14 @@ private:
 	bool* _value;
 };
 
-class TwoDTrackbar { // : UserInput
+class TwoDTrackbar : UserInput { 
 	friend ControlPanel;
 private:
-	TwoDTrackbar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, cv::Mat selector);
-	bool IsClicked(cv::Point click);
+	TwoDTrackbar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, cv::Mat selector, double* valOne, double* valTwo);
+	bool IsClicked(cv::Point click) { return false; }
+	void Click(cv::Point position, int type) { return; }
 	void Draw(cv::Mat img);
-	void Update();
-	double *valOne, *valTwo;
+	double *_valOne, *_valTwo;
 	bool lockX, lockY;
 	cv::Mat trackbarImg, selector;
 	cv::Point _position, _size, _bottomNumber, _scale; //scale is numbers per pixel
@@ -44,8 +44,8 @@ private:
 class ControlPanel {
 public:
 	ControlPanel(const char* windowName, cv::Size size);
-	void AddTrackBar(const char* name, int& value);
-	void AddCheckBox(cv::Point position, int layer, bool* value);
+	void AddTwoDTrackBar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, int layer, double* valueOne, double* valueTwo);
+	void AddCheckBox(cv::Point position, int layer, bool* value, cv::Point size = cv::Point(50, 50));
 	//lower layer means lower down, older buttons are pushed up if a newer one have a lower or the same layer
 	void Click(cv::Point position, int type);
 	void Draw();
