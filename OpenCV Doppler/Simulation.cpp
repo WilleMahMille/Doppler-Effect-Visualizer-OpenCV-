@@ -4,7 +4,6 @@
 Wave::Wave(cv::Point speed, cv::Point position, int sizeIncrease, int lifetime) : _speed(speed), _position(position),  _lifetime(lifetime) {
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
 }
-
 void Wave::Frame() {
 	IncreaseSize();
 	ApplySpeed();
@@ -22,9 +21,8 @@ void WaveSource::Frame(cv::Mat img) {
 	Draw(img);
 }
 void WaveSource::UpdatePositions() {
-	
 	_position.x += -_cameraSpeed.x + _sourceSpeed.x * (reverseX > 0 ? -reverseX : 1);
-	_position.y += -_cameraSpeed.y + _sourceSpeed.y * (reverseY > 0 ? -reverseY : 1);
+	_position.y += -_cameraSpeed.y - _sourceSpeed.y * (reverseY > 0 ? -reverseY : 1); //reverse y to create a mathematically logical coordinate system (pos y is up and pos x is right)
 	_position.x = _position.x < 0 ? 0 : _position.x;
 	_position.x = _position.x > _screenSize.x ? _screenSize.x : _position.x;
 	_position.y = _position.y < 0 ? 0 : _position.y;
@@ -65,8 +63,9 @@ void WaveSource::Draw(cv::Mat img) {
 		waves[i].Draw(img, WaveColor);
 	}
 }
+
 void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime, int* waveBounes) {
-	const char* commandWindowName = "Control Panel";
+	const char* commandWindowName = "Control Panel (old, poor design)";
 
 	cv::namedWindow(commandWindowName, cv::WINDOW_FREERATIO);
 	cv::resizeWindow(commandWindowName, cv::Size(500, 500));
@@ -80,11 +79,14 @@ void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* r
 	cv::createTrackbar("Wave Bounces", commandWindowName, waveBounes, 5);
 
 }
+
 WaveSimulation::WaveSimulation() {
 	ws = new WaveSource(cv::Point(100, 400), cv::Point(1900, 1000));
 	CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveDelay, &ws->_waveSpeed, &ws->_waveLifetime, &ws->waveBounces);
+	ctrlP = new ControlPanel("Simulation Control Window", cv::Size(400, 700));
+	TwoDTrackbar* tb = ctrlP->AddTwoDTrackBar(cv::Point(25, 25), cv::Point(350, 350), cv::Point(-30, -30), cv::Point(30, 30), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
+	ctrlP->Draw();
 }
-
 void WaveSimulation::SetCameraSpeed(cv::Point speed) {
 	ws->SetCameraSpeed(speed);
 }

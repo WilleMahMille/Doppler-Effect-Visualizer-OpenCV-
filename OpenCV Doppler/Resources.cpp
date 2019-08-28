@@ -19,3 +19,4 @@ cv::Mat Resources::LoadImg(const char* imgName) {
 	}
 	return img;
 }
+
