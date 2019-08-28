@@ -69,8 +69,8 @@ void TwoDTrackbar::Click(cv::Point position, int type, int flag) {
 		std::cout << "ValOne (x): " << *_valOne << " ValTwo (y): " << *_valTwo << "\n";
 	}
 	else if (type == cv::EVENT_LBUTTONUP && toCenter) {
-		*_valOne = (_topNumber.x - _bottomNumber.x) / 2 * _scale.first;
-		*_valTwo = (_topNumber.y - _bottomNumber.y) / 2 * _scale.second;
+		*_valOne = (_topNumber.x - _bottomNumber.x) / 2;
+		*_valTwo = (_topNumber.y - _bottomNumber.y) / 2;
 	}
 }
 
