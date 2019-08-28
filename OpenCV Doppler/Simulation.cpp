@@ -84,7 +84,11 @@ WaveSimulation::WaveSimulation() {
 	ws = new WaveSource(cv::Point(100, 400), cv::Point(1900, 1000));
 	CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveDelay, &ws->_waveSpeed, &ws->_waveLifetime, &ws->waveBounces);
 	ctrlP = new ControlPanel("Simulation Control Window", cv::Size(400, 700));
-	TwoDTrackbar* tb = ctrlP->AddTwoDTrackBar(cv::Point(25, 25), cv::Point(350, 350), cv::Point(-30, -30), cv::Point(30, 30), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
+	TwoDTrackbar* tb = ctrlP->AddTwoDTrackBar(cv::Point(25, 50), cv::Point(350, 350), cv::Point(-30, -30), cv::Point(30, 30), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
+	
+	ctrlP->AddDynamicText(new DynamicText<int>(tb->GetValOne(), cv::Point(50, 50), 2));
+	ctrlP->AddDynamicText(new DynamicText<int>(tb->GetValTwo(), cv::Point(150, 50), 2));
+	
 	ctrlP->Draw();
 }
 void WaveSimulation::SetCameraSpeed(cv::Point speed) {

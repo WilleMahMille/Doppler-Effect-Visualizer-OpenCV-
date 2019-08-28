@@ -26,12 +26,14 @@ private:
 	bool* _value;
 };
 
-class TwoDTrackbar : UserInput { 
+class TwoDTrackbar : UserInput {
 	friend ControlPanel;
 public:
 	bool* GetLockX() { return &lockX; }
 	bool* GetLockY() { return &lockY; }
 	bool* GetToCenter() { return &toCenter; }
+	int* GetValOne() { return _valOne; }
+	int* GetValTwo() { return _valTwo; }
 private:
 	TwoDTrackbar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, int *valOne, int *valTwo);
 	//valOne is x, valTwo is y
@@ -44,22 +46,34 @@ private:
 	cv::Mat trackbarImg;
 	cv::Point _position, _size, _bottomNumber, _topNumber;
 	std::pair<double, double> _scale; //scale is numbers per pixel
-
 };
 
-struct DynamicTestBase {
-	virtual	 ~DynamicTestBase() { }
+struct DynamicTextBase {
+	virtual	 ~DynamicTextBase() { }
 	virtual void Draw(cv::Mat img){ }
 };
 template<typename T>
-class DynamicText : DynamicTestBase {
+class DynamicText : public DynamicTextBase {
 	friend ControlPanel;
+public:
+	DynamicText<T>(T* textVar, cv::Point position, int textSize = 1, cv::Scalar color = cv::Scalar(180, 180, 180)) : _textVar(textVar), _position(position), _textSize(textSize), _color(color) {
+		
+		try {
+			std::to_string(*textVar);
+		}
+		catch (int exception) {
+			std::cout << "Error, type can't be cast to string\n";
+			throw(std::invalid_argument("Error, type can't be cast to string"));
+		}
+	}
 private:
-	DynamicText(T* textVar, cv::Point position, double textSize, cv::Scalar color = cv::Scalar(180, 180, 180));
-	void override Draw(cv::Mat img);
+	void Draw(cv::Mat img) {
+		std::string text = std::to_string(*_textVar);
+		cv::putText(img, text, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color, 2);
+	}
 	T* _textVar;
 	cv::Point _position;
-	double _textSize;
+	int _textSize;
 	cv::Scalar _color;
 };
 
@@ -69,6 +83,7 @@ public:
 	ControlPanel(const char* windowName, cv::Size size);
 	TwoDTrackbar* AddTwoDTrackBar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, int layer, int *valueOne, int *valueTwo);
 	CheckBox* AddCheckBox(cv::Point position, int layer, bool* value, cv::Point size = cv::Point(50, 50));
+	void AddDynamicText(DynamicTextBase* dynamicText);
 	//lower layer means lower down, older buttons are pushed up if a newer one have a lower or the same layer
 	void Click(cv::Point position, int type, int flag);
 	void Draw();
@@ -80,7 +95,7 @@ public:
 private:
 	const char* _windowName;
 	std::vector<UserInput*> inputs;
-	std::vector<std::unique_ptr<DynamicTestBase>> dynamicTexts;
+	std::vector<DynamicTextBase*> dynamicTexts;
 	cv::Size _size;
 	cv::Mat _design, _img;
 };

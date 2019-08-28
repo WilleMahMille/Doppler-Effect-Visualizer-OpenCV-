@@ -80,20 +80,7 @@ void TwoDTrackbar::Draw(cv::Mat img) {
 	cv::circle(img, selectorPos, 5, cv::Scalar(50, 255, 50), 1);
 }
 
-template<typename T>
-DynamicText<T>::DynamicText(T* textVar, cv::Point position, double textSize, cv::Scalar color) : _textVar(textVar), _position(position), _textSize(textSize) {
-	try {
-		std::to_string(*textVar);
-	}
-	catch () {
-		std::cout << "Error, type can't be cast to string\n";
-		throw(std::invalid_argument("Error, type can't be cast to string"));
-	}
-}
-template<typename T>
-void DynamicText<T>::Draw(cv::Mat img) {
-	cv::putText(img, _textVar, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color);
-}
+
 
 ControlPanel::ControlPanel(const char* windowName, cv::Size size) : _windowName(windowName), _size(size) {
 	
@@ -116,6 +103,9 @@ void ControlPanel::Draw() {
 	for (int i = 0; i < inputs.size(); i++) {
 		inputs[i]->Draw(_img);
 	}
+	for (int i = 0; i < dynamicTexts.size(); i++) {
+		dynamicTexts[i]->Draw(_img);
+	}
 	cv::imshow(_windowName, _img);
 }
 CheckBox* ControlPanel::AddCheckBox(cv::Point position, int layer, bool* value, cv::Point size) {
@@ -136,5 +126,7 @@ TwoDTrackbar* ControlPanel::AddTwoDTrackBar(cv::Point position, cv::Point size, 
 	inputs.insert(inputs.begin() + layer, tb);
 	return tb;
 }
-
+void ControlPanel::AddDynamicText(DynamicTextBase* dynamicText) {
+	dynamicTexts.push_back(dynamicText);
+}
 
