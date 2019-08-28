@@ -80,8 +80,23 @@ void TwoDTrackbar::Draw(cv::Mat img) {
 	cv::circle(img, selectorPos, 5, cv::Scalar(50, 255, 50), 1);
 }
 
+template<typename T>
+DynamicText<T>::DynamicText(T* textVar, cv::Point position, double textSize, cv::Scalar color) : _textVar(textVar), _position(position), _textSize(textSize) {
+	try {
+		std::to_string(*textVar);
+	}
+	catch () {
+		std::cout << "Error, type can't be cast to string\n";
+		throw(std::invalid_argument("Error, type can't be cast to string"));
+	}
+}
+template<typename T>
+void DynamicText<T>::Draw(cv::Mat img) {
+	cv::putText(img, _textVar, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color);
+}
 
 ControlPanel::ControlPanel(const char* windowName, cv::Size size) : _windowName(windowName), _size(size) {
+	
 	_design = cv::Mat::zeros(size, CV_8UC3);
 	_img = cv::Mat::zeros(size, CV_8UC3);
 	cv::namedWindow(_windowName);

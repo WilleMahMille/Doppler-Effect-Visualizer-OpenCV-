@@ -47,6 +47,23 @@ private:
 
 };
 
+struct DynamicTestBase {
+	virtual	 ~DynamicTestBase() { }
+	virtual void Draw(cv::Mat img){ }
+};
+template<typename T>
+class DynamicText : DynamicTestBase {
+	friend ControlPanel;
+private:
+	DynamicText(T* textVar, cv::Point position, double textSize, cv::Scalar color = cv::Scalar(180, 180, 180));
+	void override Draw(cv::Mat img);
+	T* _textVar;
+	cv::Point _position;
+	double _textSize;
+	cv::Scalar _color;
+};
+
+
 class ControlPanel {
 public:
 	ControlPanel(const char* windowName, cv::Size size);
@@ -63,6 +80,7 @@ public:
 private:
 	const char* _windowName;
 	std::vector<UserInput*> inputs;
+	std::vector<std::unique_ptr<DynamicTestBase>> dynamicTexts;
 	cv::Size _size;
 	cv::Mat _design, _img;
 };
