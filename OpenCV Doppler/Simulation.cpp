@@ -86,8 +86,8 @@ WaveSimulation::WaveSimulation() {
 	ctrlP = new ControlPanel("Simulation Control Window", cv::Size(400, 700));
 	TwoDTrackbar* tb = ctrlP->AddTwoDTrackBar(cv::Point(25, 50), cv::Point(350, 350), cv::Point(-30, -30), cv::Point(30, 30), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
 	
-	ctrlP->AddDynamicText(new DynamicText<int>(tb->GetValOne(), cv::Point(50, 50), 2));
-	ctrlP->AddDynamicText(new DynamicText<int>(tb->GetValTwo(), cv::Point(150, 50), 2));
+	ctrlP->AddDynamicText(new DynamicText<int>(tb->GetValOne(), cv::Point(50, 50), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(tb->GetValTwo(), cv::Point(150, 50), 1.2));
 	ctrlP->AddTrackbar(cv::Point(25, 450), cv::Point(350, 50), 0, 50, ctrlP->GetTopLayer(), &ws->_waveSpeed);
 	
 	ctrlP->Draw();

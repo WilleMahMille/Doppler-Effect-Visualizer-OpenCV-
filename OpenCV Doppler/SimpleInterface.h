@@ -76,7 +76,7 @@ template<typename T>
 class DynamicText : public DynamicTextBase {
 	friend ControlPanel;
 public:
-	DynamicText<T>(T* textVar, cv::Point position, int textSize = 1, cv::Scalar color = cv::Scalar(180, 180, 180)) : _textVar(textVar), _position(position), _textSize(textSize), _color(color) {
+	DynamicText<T>(T* textVar, cv::Point position, double textSize = 1, cv::Scalar color = cv::Scalar(180, 180, 180)) : _textVar(textVar), _position(position), _textSize(textSize), _color(color) {
 		
 		try {
 			std::to_string(*textVar);
@@ -89,11 +89,11 @@ public:
 private:
 	void Draw(cv::Mat img) {
 		std::string text = std::to_string(*_textVar);
-		cv::putText(img, text, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color, 2);
+		cv::putText(img, text, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color, 1);
 	}
 	T* _textVar;
 	cv::Point _position;
-	int _textSize;
+	double _textSize;
 	cv::Scalar _color;
 };
 
