@@ -48,6 +48,26 @@ private:
 	std::pair<double, double> _scale; //scale is numbers per pixel
 };
 
+class Trackbar : UserInput {
+	friend ControlPanel;
+public:
+	bool* GetToCenter() { return &toCenter; }
+	int* GetValue() { return _value; }
+private:
+	Trackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int *value);
+	//good y-value for size is 50
+	bool IsClicked(cv::Point click, int type);
+	void Click(cv::Point click, int type, int flag);
+	void Draw(cv::Mat img);
+
+	cv::Mat trackbarImg;
+	cv::Point _position, _size;
+	int _botNumber, _topNumber;
+	double _scale;
+	int* _value;
+	bool toCenter = false;
+};
+
 struct DynamicTextBase {
 	virtual	 ~DynamicTextBase() { }
 	virtual void Draw(cv::Mat img){ }
@@ -83,6 +103,7 @@ public:
 	ControlPanel(const char* windowName, cv::Size size);
 	TwoDTrackbar* AddTwoDTrackBar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, int layer, int *valueOne, int *valueTwo);
 	CheckBox* AddCheckBox(cv::Point position, int layer, bool* value, cv::Point size = cv::Point(50, 50));
+	Trackbar* AddTrackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int layer, int *value);
 	void AddDynamicText(DynamicTextBase* dynamicText);
 	//lower layer means lower down, older buttons are pushed up if a newer one have a lower or the same layer
 	void Click(cv::Point position, int type, int flag);

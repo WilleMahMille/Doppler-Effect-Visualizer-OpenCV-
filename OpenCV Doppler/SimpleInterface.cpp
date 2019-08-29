@@ -81,6 +81,41 @@ void TwoDTrackbar::Draw(cv::Mat img) {
 }
 
 
+Trackbar::Trackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int* value) : _position(position), _size(size), _botNumber(botNumber), _topNumber(topNumber), _value(value){
+	_scale = size.x / (topNumber - botNumber);
+	trackbarImg = cv::Mat::zeros(size, CV_8UC3);
+
+	int gradLinePos = size.y / 2;
+	cv::line(trackbarImg, cv::Point(0, gradLinePos), cv::Point(size.x, gradLinePos), cv::Scalar(255, 255, 255));
+	double scaleY = size.y / 25;
+	for (int i = 0; i <= topNumber - botNumber; i++) {
+		int lineSize = scaleY + (i % 5 == 0 ? scaleY : 0) + (i % 10 == 0 ? scaleY : 0) + (i % 100 == 0 ? scaleY : 0);
+		cv::line(trackbarImg, cv::Point(static_cast<int>(i * _scale), gradLinePos + lineSize), cv::Point(static_cast<int>(i * _scale), gradLinePos - lineSize), cv::Scalar(255, 255, 255));
+	}
+	
+}
+bool Trackbar::IsClicked(cv::Point click, int type) {
+	if (type == cv::EVENT_LBUTTONUP && toCenter) {
+		*_value = (_topNumber + _botNumber) / 2;
+	}
+	return (click.x >= _position.x && click.x <= _position.x + _size.x && click.y >= _position.y && click.y <= _position.y + _size.y);
+}
+void Trackbar::Click(cv::Point click, int type, int flag) {
+	if (flag == cv::EVENT_FLAG_LBUTTON) {
+		*_value = _botNumber + (click.x - _position.x) / _scale;
+	}
+}
+void Trackbar::Draw(cv::Mat img) {
+	if (img.rows < _position.y + _size.y || img.cols < _position.x + _size.x) {
+		std::cout << "Error, button out of bounds\n";
+		return;
+	}
+	trackbarImg.copyTo(img(cv::Rect(_position.x, _position.y, _size.x, _size.y)));
+	cv::Point selectorPos = cv::Point(_position.x + (*_value - _botNumber) * _scale, _position.y + _size.y / 2);
+	cv::circle(img, selectorPos, 5, cv::Scalar(50, 255, 50), 1);
+
+}
+
 
 ControlPanel::ControlPanel(const char* windowName, cv::Size size) : _windowName(windowName), _size(size) {
 	
@@ -126,7 +161,20 @@ TwoDTrackbar* ControlPanel::AddTwoDTrackBar(cv::Point position, cv::Point size, 
 	inputs.insert(inputs.begin() + layer, tb);
 	return tb;
 }
+Trackbar* ControlPanel::AddTrackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int layer, int *value) {
+	if (layer > inputs.size()) {
+		std::cout << "Error, layer too high (over top layer)\n";
+		return nullptr;
+	}
+	Trackbar* tb = new Trackbar(position, size, botNumber, topNumber, value);
+	inputs.insert(inputs.begin() + layer, tb);
+	return tb;
+}
 void ControlPanel::AddDynamicText(DynamicTextBase* dynamicText) {
 	dynamicTexts.push_back(dynamicText);
 }
+
+
+
+
 
