@@ -43,17 +43,18 @@ void WaveSource::UpdateLifetime() {
 }
 void WaveSource::SpawnWave() {
 	currentWaveDelay += FrameDelay;
-	if (currentWaveDelay >= _waveDelay) {
+	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
 		waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
-		for (int i = 0; i < waveBounces; i++) {
+		//wave bounces, entertaining concept, but physically incorrect and not used in this program (anymore)
+		/*for (int i = 0; i < waveBounces; i++) {
 			
 			waves.push_back(Wave(cv::Point(0, 0), cv::Point((i % 2 == 0 ? _screenSize.x - _position.x : _position.x) + _screenSize.x * (i + 1) * (i % 2 == 0 ? -1 : 1), _position.y), _waveSpeed, _waveLifetime));
 			waves.push_back(Wave(cv::Point(0, 0), cv::Point((i % 2 == 0 ? _screenSize.x - _position.x : _position.x) + _screenSize.x * (i + 1) * (i % 2 == 0 ? 1 : -1), _position.y), _waveSpeed, _waveLifetime));
 			
 			waves.push_back(Wave(cv::Point(0, 0), cv::Point(_position.x, (i % 2 == 0 ? _screenSize.y - _position.y : _position.y) + _screenSize.y * (i + 1) * (i % 2 == 0 ? 1 : -1)), _waveSpeed, _waveLifetime));
 			waves.push_back(Wave(cv::Point(0, 0), cv::Point(_position.x, (i % 2 == 0 ? _screenSize.y - _position.y : _position.y) + _screenSize.y * (i + 1) * (i % 2 == 0 ? -1 : 1)), _waveSpeed, _waveLifetime));
-		}
+		}*/
 	}
 }
 void WaveSource::Draw(cv::Mat img) {
@@ -64,8 +65,9 @@ void WaveSource::Draw(cv::Mat img) {
 	}
 }
 
-void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime, int* waveBounes) {
-	const char* commandWindowName = "Control Panel (old, poor design)";
+void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime) {
+	//old and deprecated
+	const char* commandWindowName = "Control Panel (deprecated)";
 
 	cv::namedWindow(commandWindowName, cv::WINDOW_FREERATIO);
 	cv::resizeWindow(commandWindowName, cv::Size(500, 500));
@@ -76,38 +78,45 @@ void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* r
 	cv::createTrackbar("Wave Spawn Delay", commandWindowName, waveDelay, 5000);
 	cv::createTrackbar("Wave Speed", commandWindowName, waveSpeed, 75);
 	cv::createTrackbar("Wave Lifetime", commandWindowName, waveLifetime, 10000);
-	cv::createTrackbar("Wave Bounces", commandWindowName, waveBounes, 5);
 
 }
 
 WaveSimulation::WaveSimulation() {
-	ws = new WaveSource(cv::Point(100, 400), cv::Point(1900, 1000));
-	CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveDelay, &ws->_waveSpeed, &ws->_waveLifetime, &ws->waveBounces);
-	ctrlP = new ControlPanel("Simulation Control Window", cv::Size(400, 700));
+	cv::namedWindow("Doppler effect", cv::WINDOW_FULLSCREEN);
+
+	ws = new WaveSource(cv::Point(100, 400), cv::Point(1920, 1080));
+	//CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveFrequency, &ws->_waveSpeed, &ws->_waveLifetime); //old and deprecated
+	ctrlP = new ControlPanel("Simulation Control Window", cv::Size(400, 800));
 	//setting the design for controlpanel
 	cv::Mat controlPanelDesign = ctrlP->GetDesign();
 	cv::putText(controlPanelDesign, "Velocity", cv::Point(25, 35), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
-	cv::putText(controlPanelDesign, "X:", cv::Point(250, 35), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "X:", cv::Point(240, 35), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "Y:", cv::Point(300, 35), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "Lock X", cv::Point(25, 65), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "Lock Y", cv::Point(125, 65), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "To Center", cv::Point(225, 65), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
-	cv::putText(controlPanelDesign, "Wave speed", cv::Point(25, 520), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "Wave speed", cv::Point(15, 520), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 	cv::putText(controlPanelDesign, "Current:", cv::Point(250, 520), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
-	cv::putText(controlPanelDesign, "ms:", cv::Point(250, 615), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Wave Frequency", cv::Point(15, 620), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "ms:", cv::Point(290, 620), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Wave lifetime", cv::Point(15, 715), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 715), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+
 	//adding userinput elements
 	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-20, -20), cv::Point(20, 20), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
 	Trackbar *waveSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 530), cv::Point(350, 50), 0, 50, ctrlP->GetTopLayer(), &ws->_waveSpeed);
-	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 625), cv::Point(350, 50), 0, 10001, ctrlP->GetTopLayer(), &ws->_waveLifetime);
+	Trackbar *waveFrequencyTB = ctrlP->AddTrackbar(cv::Point(25, 630), cv::Point(350, 50), 0, 10000, ctrlP->GetTopLayer(), &ws->_waveFrequency);
+	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 725), cv::Point(350, 50), 0, 10000, ctrlP->GetTopLayer(), &ws->_waveLifetime);
 
 	ctrlP->AddCheckBox(cv::Point(87, 52), ctrlP->GetTopLayer(), tdtb->GetLockX(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(187, 52), ctrlP->GetTopLayer(), tdtb->GetLockY(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(317, 52), ctrlP->GetTopLayer(), tdtb->GetToCenter(), cv::Point(15, 15));
 	//adding dynamic texts
-	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValOne(), cv::Point(320, 35), 1.2));
-	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValTwo(), cv::Point(270, 35), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValOne(), cv::Point(260, 35), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValTwo(), cv::Point(320, 35), 1.2));
 	ctrlP->AddDynamicText(new DynamicText<int>(waveSpeedTB->GetValue(), cv::Point(340, 520), 1.2));
-	ctrlP->AddDynamicText(new DynamicText<int>(waveLifetimeTB->GetValue(), cv::Point(340, 615), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(waveFrequencyTB->GetValue(), cv::Point(330, 620), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(waveLifetimeTB->GetValue(), cv::Point(320, 715), 1.2));
 	
 	//showing the controlpanel
 	ctrlP->Draw();
@@ -115,10 +124,9 @@ WaveSimulation::WaveSimulation() {
 void WaveSimulation::SetCameraSpeed(cv::Point speed) {
 	ws->SetCameraSpeed(speed);
 }
-
 void WaveSimulation::RunSimulation() {
 	while (true) {
-		cv::Mat img = cv::Mat::zeros(cv::Point(1900, 1000), CV_8UC3);
+		cv::Mat img = cv::Mat::zeros(cv::Point(1920, 1080), CV_8UC3);
 		ws->Frame(img);
 		cv::imshow("Doppler effect", img);
 		int temp = cv::waitKey(30);

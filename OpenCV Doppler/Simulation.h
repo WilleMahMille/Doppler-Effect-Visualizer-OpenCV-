@@ -30,7 +30,7 @@ private:
 class WaveSource {
 friend class WaveSimulation;
 public:
-	WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed = cv::Point(0, 0), cv::Point cameraSpeed = cv::Point(0, 0), int wavedelay = 1000, int waveLifetime = 3000) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveDelay(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
+	WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed = cv::Point(0, 0), cv::Point cameraSpeed = cv::Point(0, 0), int wavedelay = 1000, int waveLifetime = 3000) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
 	}
 
 	inline void SetSourceSpeed(cv::Point sourceSpeed) { _sourceSpeed = sourceSpeed; }
@@ -46,7 +46,8 @@ private:
 	cv::Point _position, _sourceSpeed, _cameraSpeed;
 	cv::Point _screenSize;
 	int reverseX = 0, reverseY = 0;
-	int _waveDelay, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5, waveBounces = 0;
+	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
+	//int waveBounces = 0; //deprecated and not used in this program anymore
 	std::vector<Wave> waves;
 
 	void UpdatePositions();

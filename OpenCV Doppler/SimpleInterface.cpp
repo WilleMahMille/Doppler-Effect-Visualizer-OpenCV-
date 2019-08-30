@@ -123,6 +123,7 @@ ControlPanel::ControlPanel(const char* windowName, cv::Size size) : _windowName(
 	_img = cv::Mat::zeros(size, CV_8UC3);
 	cv::namedWindow(_windowName);
 	cv::resizeWindow(_windowName, _size);
+	cv::moveWindow(_windowName, 1520, 0);
 	cv::setMouseCallback(_windowName, OnMouseClick, reinterpret_cast<void*>(this));
 }
 void ControlPanel::Click(cv::Point position, int type, int flag) {
