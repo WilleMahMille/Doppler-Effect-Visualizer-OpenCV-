@@ -77,19 +77,19 @@ void TwoDTrackbar::Draw(cv::Mat img) {
 	}
 	trackbarImg.copyTo(img(cv::Rect(_position.x, _position.y, _size.x, _size.y)));
 	cv::Point selectorPos = cv::Point(static_cast<int>(_position.x + (*_valOne - _bottomNumber.x) * _scale.first), static_cast<int>(_position.y + _size.y - (*_valTwo - _bottomNumber.y) * _scale.second));
-	cv::circle(img, selectorPos, 5, cv::Scalar(50, 255, 50), 1);
+	cv::circle(img, selectorPos, 6, cv::Scalar(50, 255, 50), 2);
 }
 
 
 Trackbar::Trackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int* value) : _position(position), _size(size), _botNumber(botNumber), _topNumber(topNumber), _value(value){
-	_scale = size.x / (topNumber - botNumber);
+	_scale = size.x / static_cast<double>(topNumber - botNumber);
 	trackbarImg = cv::Mat::zeros(size, CV_8UC3);
 
 	int gradLinePos = size.y / 2;
 	cv::line(trackbarImg, cv::Point(0, gradLinePos), cv::Point(size.x, gradLinePos), cv::Scalar(255, 255, 255));
 	double scaleY = size.y / 25;
 	for (int i = 0; i <= topNumber - botNumber; i++) {
-		int lineSize = scaleY + (i % 5 == 0 ? scaleY : 0) + (i % 10 == 0 ? scaleY : 0) + (i % 100 == 0 ? scaleY : 0);
+		int lineSize = _scale < 0.1 ? (i % 100 == 0 ? scaleY: 0) + (i % 500 == 0 ? scaleY : 0) + (i % 1000 == 0 ? scaleY : 0) : (scaleY + (i % 5 == 0 ? scaleY : 0) + (i % 10 == 0 ? scaleY : 0) + (i % 100 == 0 ? scaleY * 2 : 0));
 		cv::line(trackbarImg, cv::Point(static_cast<int>(i * _scale), gradLinePos + lineSize), cv::Point(static_cast<int>(i * _scale), gradLinePos - lineSize), cv::Scalar(255, 255, 255));
 	}
 	
@@ -112,7 +112,7 @@ void Trackbar::Draw(cv::Mat img) {
 	}
 	trackbarImg.copyTo(img(cv::Rect(_position.x, _position.y, _size.x, _size.y)));
 	cv::Point selectorPos = cv::Point(_position.x + (*_value - _botNumber) * _scale, _position.y + _size.y / 2);
-	cv::circle(img, selectorPos, 5, cv::Scalar(50, 255, 50), 1);
+	cv::circle(img, selectorPos, 6, cv::Scalar(50, 255, 50), 2);
 
 }
 

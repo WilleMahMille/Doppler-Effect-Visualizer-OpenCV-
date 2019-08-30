@@ -76,7 +76,7 @@ template<typename T>
 class DynamicText : public DynamicTextBase {
 	friend ControlPanel;
 public:
-	DynamicText<T>(T* textVar, cv::Point position, double textSize = 1, cv::Scalar color = cv::Scalar(180, 180, 180)) : _textVar(textVar), _position(position), _textSize(textSize), _color(color) {
+	DynamicText<T>(T* textVar, cv::Point position, double textSize = 1, cv::Scalar color = cv::Scalar(210, 210, 210)) : _textVar(textVar), _position(position), _textSize(textSize), _color(color) {
 		
 		try {
 			std::to_string(*textVar);
