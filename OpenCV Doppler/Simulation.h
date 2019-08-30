@@ -4,7 +4,9 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include "SimpleInterface.h"
-
+constexpr int windowWidth = 1920;
+constexpr int windowHeight = 1020;
+constexpr int controlPanelWidth = 400; //400 is standard
 
 class Wave {
 public:
@@ -65,6 +67,7 @@ public:
 	void RunSimulation();
 
 private:
+	cv::Mat _img;
 	ControlPanel* ctrlP;
 	WaveSource* ws;
 	cv::Point _cameraSpeed;

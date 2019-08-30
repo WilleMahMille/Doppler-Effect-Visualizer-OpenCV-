@@ -100,7 +100,7 @@ private:
 
 class ControlPanel {
 public:
-	ControlPanel(const char* windowName, cv::Size size);
+	ControlPanel(const char* windowName, cv::Size size, cv::Point position, cv::Mat showImg);
 	TwoDTrackbar* AddTwoDTrackBar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, int layer, int *valueOne, int *valueTwo);
 	CheckBox* AddCheckBox(cv::Point position, int layer, bool* value, cv::Point size = cv::Point(50, 50));
 	Trackbar* AddTrackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int layer, int *value);
@@ -110,15 +110,17 @@ public:
 	void Draw();
 	const char* GetWindowName() { return _windowName; }
 	int GetTopLayer() { return static_cast<int>(inputs.size()); }
+	cv::Point GetPosition() { return _position; }
 	cv::Size GetSize() { return _size; }
 	cv::Mat GetDesign() { return _design; }
 
 private:
+	cv::Point _position;
 	const char* _windowName;
 	std::vector<UserInput*> inputs;
 	std::vector<DynamicTextBase*> dynamicTexts;
 	cv::Size _size;
-	cv::Mat _design, _img;
+	cv::Mat _design, _img, _showImg;
 };
 
 

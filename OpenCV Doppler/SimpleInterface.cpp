@@ -6,7 +6,7 @@ void OnMouseClick(int evnt, int x, int y, int flags, void* userData) {
 	if (flags == cv::EVENT_FLAG_LBUTTON || evnt == cv::EVENT_LBUTTONUP ) {
 
 		ControlPanel* panel = reinterpret_cast<ControlPanel*>(userData);
-		panel->Click(cv::Point(x, y), evnt, flags);
+		panel->Click(cv::Point(x, y) - panel->GetPosition(), evnt, flags);
 	}
 }
 
@@ -117,13 +117,11 @@ void Trackbar::Draw(cv::Mat img) {
 }
 
 
-ControlPanel::ControlPanel(const char* windowName, cv::Size size) : _windowName(windowName), _size(size) {
+ControlPanel::ControlPanel(const char* windowName, cv::Size size, cv::Point position, cv::Mat showImg) : _windowName(windowName), _size(size), _position(position), _showImg(showImg) {
 	
 	_design = cv::Mat::zeros(size, CV_8UC3);
 	_img = cv::Mat::zeros(size, CV_8UC3);
 	cv::namedWindow(_windowName);
-	cv::resizeWindow(_windowName, _size);
-	cv::moveWindow(_windowName, 1520, 0);
 	cv::setMouseCallback(_windowName, OnMouseClick, reinterpret_cast<void*>(this));
 }
 void ControlPanel::Click(cv::Point position, int type, int flag) {
@@ -142,7 +140,8 @@ void ControlPanel::Draw() {
 	for (int i = 0; i < dynamicTexts.size(); i++) {
 		dynamicTexts[i]->Draw(_img);
 	}
-	cv::imshow(_windowName, _img);
+	cv::line(_img, cv::Point(0, 0), cv::Point(0, _size.height), cv::Scalar(150, 150, 150), 2);
+	_img.copyTo(_showImg(cv::Rect(_position.x, _position.y, _size.width, _size.height)));
 }
 CheckBox* ControlPanel::AddCheckBox(cv::Point position, int layer, bool* value, cv::Point size) {
 	if (layer > inputs.size()) {

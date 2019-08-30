@@ -54,7 +54,7 @@ void WaveSource::SpawnWave() {
 			
 			waves.push_back(Wave(cv::Point(0, 0), cv::Point(_position.x, (i % 2 == 0 ? _screenSize.y - _position.y : _position.y) + _screenSize.y * (i + 1) * (i % 2 == 0 ? 1 : -1)), _waveSpeed, _waveLifetime));
 			waves.push_back(Wave(cv::Point(0, 0), cv::Point(_position.x, (i % 2 == 0 ? _screenSize.y - _position.y : _position.y) + _screenSize.y * (i + 1) * (i % 2 == 0 ? -1 : 1)), _waveSpeed, _waveLifetime));
-		}*/
+		}*/	
 	}
 }
 void WaveSource::Draw(cv::Mat img) {
@@ -78,15 +78,16 @@ void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* r
 	cv::createTrackbar("Wave Spawn Delay", commandWindowName, waveDelay, 5000);
 	cv::createTrackbar("Wave Speed", commandWindowName, waveSpeed, 75);
 	cv::createTrackbar("Wave Lifetime", commandWindowName, waveLifetime, 10000);
-
 }
 
 WaveSimulation::WaveSimulation() {
+	_img = cv::Mat::zeros(cv::Size(windowWidth, windowHeight), CV_8UC3);
 	cv::namedWindow("Doppler effect", cv::WINDOW_FULLSCREEN);
+	cv::resizeWindow("Doppler effect", cv::Size(windowWidth, windowHeight));
 
-	ws = new WaveSource(cv::Point(100, 400), cv::Point(1920, 1080));
+	ws = new WaveSource(cv::Point((windowWidth - controlPanelWidth ) / 2, windowHeight / 2), cv::Point(windowWidth - controlPanelWidth, windowHeight));
 	//CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveFrequency, &ws->_waveSpeed, &ws->_waveLifetime); //old and deprecated
-	ctrlP = new ControlPanel("Simulation Control Window", cv::Size(400, 800));
+	ctrlP = new ControlPanel("Doppler effect", cv::Size(controlPanelWidth, windowHeight), cv::Point(windowWidth - controlPanelWidth, 0), _img);
 	//setting the design for controlpanel
 	cv::Mat controlPanelDesign = ctrlP->GetDesign();
 	cv::putText(controlPanelDesign, "Velocity", cv::Point(25, 35), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
@@ -126,9 +127,10 @@ void WaveSimulation::SetCameraSpeed(cv::Point speed) {
 }
 void WaveSimulation::RunSimulation() {
 	while (true) {
-		cv::Mat img = cv::Mat::zeros(cv::Point(1920, 1080), CV_8UC3);
-		ws->Frame(img);
-		cv::imshow("Doppler effect", img);
+		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC3);
+		ws->Frame(_img);
+		ctrlP->Draw();
+		cv::imshow("Doppler effect", _img);
 		int temp = cv::waitKey(30);
 		if (temp == 27) {
 			break;
