@@ -1,12 +1,32 @@
 #include "Simulation.h"
 
+/*
+WaveParticle::WaveParticle(cv::Point position, cv::Point velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
+}
+void WaveParticle::Draw(cv::Mat img) {
+	cv::line(img, _position, _position, _color);
+}
+void WaveParticle::Collide(cv::Rect hitbox) {
+	return;
+}
+bool WaveParticle::CollidingWith(cv::Rect hitbox) {
+	return false;
+}
+*/
 
 Wave::Wave(cv::Point speed, cv::Point position, int sizeIncrease, int lifetime) : _speed(speed), _position(position),  _lifetime(lifetime) {
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
+	//waveParticles.insert(waveParticles.begin(), WaveParticle(cv::Point(400, 400), cv::Point(0, 0), WaveColor));
 }
 void Wave::Frame() {
 	IncreaseSize();
 	ApplySpeed();
+}
+void Wave::Draw(cv::Mat img) {
+	//for (WaveParticle p : waveParticles) {
+		//p->Draw(img);
+	//}
+	cv::circle(img, _position, _size / 2, *WaveColor);
 }
 
 void WaveSource::SetWaveSizeIncrease(int newIncrease) {
@@ -61,7 +81,7 @@ void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
 	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i].Draw(img, WaveColor);
+		waves[i].Draw(img);
 	}
 }
 

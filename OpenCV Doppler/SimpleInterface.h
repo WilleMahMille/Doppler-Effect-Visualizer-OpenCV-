@@ -81,7 +81,7 @@ public:
 		try {
 			std::to_string(*textVar);
 		}
-		catch (int exception) {
+		catch (int) {
 			std::cout << "Error, type can't be cast to string\n";
 			throw(std::invalid_argument("Error, type can't be cast to string"));
 		}

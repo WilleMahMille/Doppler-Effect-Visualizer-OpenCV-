@@ -4,26 +4,49 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 #include "SimpleInterface.h"
-constexpr int windowWidth = 1920;
-constexpr int windowHeight = 1020;
+constexpr int windowWidth = 1920; //screenwidth
+constexpr int windowHeight = 1020; //screenheight - 60 (windows taskbar)
 constexpr int controlPanelWidth = 400; //400 is standard
+
+
+class Wave;
+
+/*class WaveParticle {
+	friend Wave;
+private:
+	WaveParticle(cv::Point position, cv::Point velocity, cv::Scalar color = cv::Scalar(255, 200, 100));
+	void UpdatePosition() { _position += _velocity; }
+	void Draw(cv::Mat img);
+	void Collide(cv::Rect hitbox);
+	bool CollidingWith(cv::Rect hitbox);
+	
+
+	cv::Scalar _color;
+	cv::Point _velocity, _position;
+	double size;
+};
+*/
 
 class Wave {
 public:
 	Wave(cv::Point speed, cv::Point position, int sizeIncrease, int lifetime);
 	void Frame();
+	void Draw(cv::Mat img);
 
 	void SetSizeIncrease(int sizeIncrease) { _sizeIncrease = sizeIncrease; }
 	void SetSpeed(cv::Point speed) { _speed = speed; }
 	void LifetimeDecrease(int FrameDelay) { _lifetime -= FrameDelay; }
 	bool IsDead() { return _lifetime <= 0; }
-	void Draw(cv::Mat img, cv::Scalar WaveColor) { cv::circle(img, _position, _size / 2, WaveColor);	}
+	
 
 private:
-
+	const cv::Scalar *WaveColor = new cv::Scalar(255, 200, 100);
+	
+	//std::vector<WaveParticle> waveParticles;
 	cv::Point _position, _speed;
 	int _size = 10, _sizeIncrease;
 	int _lifetime;
+	
 
 	void IncreaseSize() { _size += _sizeIncrease; }
 	void ApplySpeed() { _position += _speed; }
@@ -43,7 +66,6 @@ public:
 private:
 	const int FrameDelay = 30;
 	const cv::Scalar WaveSourceColor = cv::Scalar(200, 29, 0);
-	const cv::Scalar WaveColor = cv::Scalar(255, 200, 100);
 
 	cv::Point _position, _sourceSpeed, _cameraSpeed;
 	cv::Point _screenSize;
