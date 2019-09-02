@@ -11,7 +11,7 @@ constexpr int controlPanelWidth = 400; //400 is standard
 
 class Wave;
 
-/*class WaveParticle {
+class WaveParticle {
 	friend Wave;
 private:
 	WaveParticle(cv::Point position, cv::Point velocity, cv::Scalar color = cv::Scalar(255, 200, 100));
@@ -25,7 +25,7 @@ private:
 	cv::Point _velocity, _position;
 	double size;
 };
-*/
+
 
 class Wave {
 public:
@@ -40,9 +40,9 @@ public:
 	
 
 private:
-	const cv::Scalar *WaveColor = new cv::Scalar(255, 200, 100);
 	
-	//std::vector<WaveParticle> waveParticles;
+	const cv::Scalar *WaveColor = new cv::Scalar(255, 200, 100);
+	std::vector<WaveParticle> waveParticles;
 	cv::Point _position, _speed;
 	int _size = 10, _sizeIncrease;
 	int _lifetime;
