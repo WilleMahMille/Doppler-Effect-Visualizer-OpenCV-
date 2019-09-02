@@ -1,11 +1,27 @@
 #include "Simulation.h"
+#define _USE_MATH_DEFINES
+
+std::pair<float, float> operator *(std::pair<float, float> p, int i) {
+	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
+	return std::make_pair<float, float>(p.first * i, p.second * i);
+}
+std::pair<float, float> operator +=(std::pair<float, float> p1, std::pair<float, float> p2) {
+	//overloaded incorrectly
+	return std::pair<float, float>(p1.first + p2.first, p1.second + p2.second);
+}
 
 
-WaveParticle::WaveParticle(cv::Point position, cv::Point velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
+
+WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
+	std::cout << "test\n ";
 }
 void WaveParticle::Draw(cv::Mat img) {
-	cv::rectangle(img, _position, _position + cv::Point(1, 1), 2, cv::FILLED);
+	cv::Point pointPos = cv::Point(static_cast<int>(_position.first), static_cast<int>(_position.second));
+	cv::rectangle(img, cv::Rect(pointPos - cv::Point(1, 1), pointPos + cv::Point(1, 1)), cv::Scalar(200, 200, 200), -1);
 	//cv::line(img, _position, _position + cv::Point(1, 1), _color);
+}
+void WaveParticle::UpdatePosition() { 
+	_position += _velocity;
 }
 void WaveParticle::Collide(cv::Rect hitbox) {
 	return;
@@ -15,21 +31,47 @@ bool WaveParticle::CollidingWith(cv::Rect hitbox) {
 }
 
 
-Wave::Wave(cv::Point speed, cv::Point position, int sizeIncrease, int lifetime) : _speed(speed), _position(position),  _lifetime(lifetime) {
-	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
-	waveParticles.push_back(WaveParticle(cv::Point(400, 400), cv::Point(0, 0), *WaveColor));
+
+Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, bool particles, std::vector<std::pair<float, float>>* particleVelocity) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), _particles(particles) {
+	if (_particles) {
+		for (int i = 0; i < particlesPerWave; i++) {
+			std::pair<float, float> test = (*particleVelocity)[i];
+			std::pair<float, float> particleVel = (*particleVelocity)[i] * sizeIncrease;
+			waveParticles.push_back(new WaveParticle(cameraSpeed, std::make_pair<float, float>(static_cast<float>(position.x), static_cast<float>(position.y)), particleVel));
+		}
+	}
+	else {
+		_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
+	}
 }
 void Wave::Frame() {
-	IncreaseSize();
-	ApplySpeed();
+	if (_particles) {
+		for (WaveParticle *wp : waveParticles) {
+			wp->UpdatePosition();
+		}
+	}
+	else {
+		IncreaseSize();
+		UpdateSize();
+	}
 }
 void Wave::Draw(cv::Mat img) {
-	for (WaveParticle p : waveParticles) {
-		p.Draw(img);
+	if (_particles) {
+		for (WaveParticle *wp : waveParticles) {
+			wp->Draw(img);
+		}
 	}
-	cv::circle(img, _position, _size / 2, *WaveColor);
+	else {
+		cv::circle(img, _position, _size / 2, *WaveColor);
+	}
 }
 
+WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
+	for (int i = 0; i < particlesPerWave; i++) {
+		float rad = 2 * pi * i / particlesPerWave;
+		particleVelocities.push_back(std::make_pair<float, float>(cos(rad), sin(rad)));
+	}
+}
 void WaveSource::SetWaveSizeIncrease(int newIncrease) {
 	for (int i = 0; i < waves.size(); i++) {
 		waves[i].SetSizeIncrease(newIncrease);
@@ -66,7 +108,7 @@ void WaveSource::SpawnWave() {
 	currentWaveDelay += FrameDelay;
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
-		waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
+		waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, true, &particleVelocities));
 		//wave bounces, entertaining concept, but physically incorrect and not used in this program (anymore)
 		/*for (int i = 0; i < waveBounces; i++) {
 			
