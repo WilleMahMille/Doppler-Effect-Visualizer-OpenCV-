@@ -5,9 +5,9 @@ std::pair<float, float> operator *(std::pair<float, float> p, int i) {
 	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
 	return std::make_pair<float, float>(p.first * i, p.second * i);
 }
-std::pair<float, float> operator +=(std::pair<float, float> p1, std::pair<float, float> p2) {
+void operator +=(std::pair<float, float> &p1, std::pair<float, float> p2) {
 	//overloaded incorrectly
-	return std::pair<float, float>(p1.first + p2.first, p1.second + p2.second);
+	p1 = std::pair<float, float>(p1.first + p2.first, p1.second + p2.second);
 }
 
 
@@ -32,16 +32,28 @@ bool WaveParticle::CollidingWith(cv::Rect hitbox) {
 
 
 
-Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, bool particles, std::vector<std::pair<float, float>>* particleVelocity) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), _particles(particles) {
-	if (_particles) {
+Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime) {
+	
+		_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
+		if (_particles) {
+		std::pair<float, float> p(400, 400);
 		for (int i = 0; i < particlesPerWave; i++) {
-			std::pair<float, float> test = (*particleVelocity)[i];
-			std::pair<float, float> particleVel = (*particleVelocity)[i] * sizeIncrease;
-			waveParticles.push_back(new WaveParticle(cameraSpeed, std::make_pair<float, float>(static_cast<float>(position.x), static_cast<float>(position.y)), particleVel));
+			//std::pair<float, float> test = (*particleVelocity)[i];
+			//std::pair<float, float> particleVel = (*particleVelocity)[i] * sizeIncrease;
+			//waveParticles.push_back(new WaveParticle(cameraSpeed, p, (*particleVelocity)[i] * sizeIncrease));
 		}
 	}
 	else {
-		_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
+	}
+}
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), _particles(particles) {
+	if (particlesPerWave != particles->size()) {
+		std::cout << "error, particles size does not match particlesPerWave\n";
+	}
+	for (int i = 0; i < particlesPerWave; i++) {
+		WaveParticle &p = (*particles)[i];
+		p.MultiplyVelocity(sizeIncrease);
+		
 	}
 }
 void Wave::Frame() {

@@ -18,12 +18,13 @@ class Wave;
 
 class WaveParticle {
 	friend Wave;
-private:
 	WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color = cv::Scalar(255, 200, 100));
+private:
 	void UpdatePosition();
 	void Draw(cv::Mat img);
 	void Collide(cv::Rect hitbox);
 	bool CollidingWith(cv::Rect hitbox);
+	void MultiplyVelocity(int multiplier) { _velocity * multiplier; }
 	
 
 	cv::Scalar _color;
@@ -35,7 +36,8 @@ private:
 
 class Wave {
 public:
-	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, bool particles = false, std::vector<std::pair<float, float>>* particleVelocity = nullptr);
+	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime); //wave constructor
+	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle> *particles); //particle wave constructor
 	void Frame();
 	void Draw(cv::Mat img);
 
