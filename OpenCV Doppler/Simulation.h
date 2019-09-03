@@ -12,19 +12,20 @@ constexpr int controlPanelWidth = 400; //400 is standard
 constexpr int particlesPerWave = 360;
 constexpr float pi = static_cast<float>(3.14159265358979323846); // pi
 
-
 class Wave;
 
 
 class WaveParticle {
 	friend Wave;
+public:
 	WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color = cv::Scalar(255, 200, 100));
 private:
 	void UpdatePosition();
 	void Draw(cv::Mat img);
 	void Collide(cv::Rect hitbox);
 	bool CollidingWith(cv::Rect hitbox);
-	void MultiplyVelocity(int multiplier) { _velocity * multiplier; }
+	void MultiplyVelocity(int multiplier) { _velocity = _velocity * multiplier; }
+	void SetPosition(std::pair<float, float> pos) { _position = pos; }
 	
 
 	cv::Scalar _color;
@@ -50,11 +51,12 @@ public:
 private:
 	
 	const cv::Scalar *WaveColor = new cv::Scalar(255, 200, 100);
-	std::vector<WaveParticle*> waveParticles;
 	cv::Point _position, _cameraSpeed;
 	int _size = 10, _sizeIncrease;
 	int _lifetime;
-	bool _particles;
+
+	bool _particles = false;
+	std::vector<WaveParticle>* waveParticles;
 
 	void IncreaseSize() { _size += _sizeIncrease; }
 	void UpdateSize() { _position += _cameraSpeed; }
@@ -71,21 +73,25 @@ public:
 	void Frame(cv::Mat img);
 
 private:
-	const int FrameDelay = 30;
-	const cv::Scalar WaveSourceColor = cv::Scalar(200, 29, 0);
 
-	cv::Point _position, _sourceSpeed, _cameraSpeed;
-	cv::Point _screenSize;
-	int reverseX = 0, reverseY = 0;
-	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
-	//int waveBounces = 0; //deprecated and not used in this program anymore
-	std::vector<Wave> waves;
 	void UpdatePositions();
 	void UpdateLifetime();
 	void SpawnWave();
 	void Draw(cv::Mat img);
 	void UpdateWaveSpeed() { _waveSpeed = _waveSpeed > 0 ? _waveSpeed : 1; }
 
+
+	const int FrameDelay = 30;
+	const cv::Scalar WaveSourceColor = cv::Scalar(200, 29, 0);
+	cv::Point _position, _sourceSpeed, _cameraSpeed;
+	cv::Point _screenSize;
+	int reverseX = 0, reverseY = 0;
+	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
+	bool _particleWave = true;
+	//int waveBounces = 0; //deprecated and not used in this program anymore
+	std::vector<Wave> waves;
+
+	std::vector<WaveParticle>* waveParticles;
 	std::vector<std::pair<float, float>> particleVelocities;
 };
 

@@ -1,19 +1,8 @@
 #include "Simulation.h"
 #define _USE_MATH_DEFINES
 
-std::pair<float, float> operator *(std::pair<float, float> p, int i) {
-	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
-	return std::make_pair<float, float>(p.first * i, p.second * i);
-}
-void operator +=(std::pair<float, float> &p1, std::pair<float, float> p2) {
-	//overloaded incorrectly
-	p1 = std::pair<float, float>(p1.first + p2.first, p1.second + p2.second);
-}
-
-
 
 WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
-	std::cout << "test\n ";
 }
 void WaveParticle::Draw(cv::Mat img) {
 	cv::Point pointPos = cv::Point(static_cast<int>(_position.first), static_cast<int>(_position.second));
@@ -22,6 +11,7 @@ void WaveParticle::Draw(cv::Mat img) {
 }
 void WaveParticle::UpdatePosition() { 
 	_position += _velocity;
+	std::cout << "updated velocity\n"; //here is the error, probably
 }
 void WaveParticle::Collide(cv::Rect hitbox) {
 	return;
@@ -34,32 +24,26 @@ bool WaveParticle::CollidingWith(cv::Rect hitbox) {
 
 Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime) {
 	
-		_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
-		if (_particles) {
-		std::pair<float, float> p(400, 400);
-		for (int i = 0; i < particlesPerWave; i++) {
-			//std::pair<float, float> test = (*particleVelocity)[i];
-			//std::pair<float, float> particleVel = (*particleVelocity)[i] * sizeIncrease;
-			//waveParticles.push_back(new WaveParticle(cameraSpeed, p, (*particleVelocity)[i] * sizeIncrease));
-		}
-	}
-	else {
-	}
+	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
+	
 }
-Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), _particles(particles) {
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles) {
 	if (particlesPerWave != particles->size()) {
 		std::cout << "error, particles size does not match particlesPerWave\n";
 	}
-	for (int i = 0; i < particlesPerWave; i++) {
-		WaveParticle &p = (*particles)[i];
+	std::cout << "created wave\n";
+	_particles = true;
+	for (WaveParticle p : (*particles)) {
 		p.MultiplyVelocity(sizeIncrease);
-		
+		p.SetPosition(position);
+		std::cout << "set position\n";
 	}
+	std::cout << "wave created\n";
 }
 void Wave::Frame() {
 	if (_particles) {
-		for (WaveParticle *wp : waveParticles) {
-			wp->UpdatePosition();
+		for (WaveParticle wp : *waveParticles) {
+			wp.UpdatePosition();
 		}
 	}
 	else {
@@ -69,8 +53,8 @@ void Wave::Frame() {
 }
 void Wave::Draw(cv::Mat img) {
 	if (_particles) {
-		for (WaveParticle *wp : waveParticles) {
-			wp->Draw(img);
+		for (WaveParticle wp : *waveParticles) {
+			wp.Draw(img);
 		}
 	}
 	else {
@@ -118,9 +102,36 @@ void WaveSource::UpdateLifetime() {
 }
 void WaveSource::SpawnWave() {
 	currentWaveDelay += FrameDelay;
+	if (_particleWave) {
+		if (waveParticles == nullptr) {
+			std::cout << "created new waveParticle vector\n";
+			waveParticles = new std::vector<WaveParticle>();
+		}
+
+		int currentParticleVectorSize = waveParticles->size();
+		int waveSpawnDelayLeft = currentWaveDelay > _waveFrequency ? 0 : _waveFrequency - currentWaveDelay;
+		float framesLeft = static_cast<float>(waveSpawnDelayLeft) / FrameDelay;
+		int wavesLeft = particlesPerWave - currentParticleVectorSize;
+		int wavesThisFrame = static_cast<int>(wavesLeft / ceil(framesLeft));
+		std::pair<float, float> pos(0, 0);
+		
+		for (int i = 0; i < wavesThisFrame; i++) {
+			waveParticles->push_back(WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
+		}
+	}
+	else {
+		delete waveParticles;
+	}
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
-		waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, true, &particleVelocities));
+		if (_particleWave) {
+			waves.push_back(Wave(_cameraSpeed, std::pair<float, float>(_position.x, _position.y), _waveSpeed, _waveLifetime, waveParticles));
+			waveParticles = nullptr;
+		}
+		else {
+			waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
+		}
+		
 		//wave bounces, entertaining concept, but physically incorrect and not used in this program (anymore)
 		/*for (int i = 0; i < waveBounces; i++) {
 			
