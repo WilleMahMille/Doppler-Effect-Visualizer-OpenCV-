@@ -12,10 +12,16 @@ void WaveParticle::Draw(cv::Mat img) {
 void WaveParticle::UpdatePosition() { 
 	_position += _velocity;
 }
-void WaveParticle::Collide(cv::Rect hitbox) {
+void WaveParticle::Collide(Hitbox *hitbox) {
+	
 	return;
 }
-bool WaveParticle::CollidingWith(cv::Rect hitbox) {
+bool WaveParticle::CollidingWith(Hitbox *hitbox) {
+	
+
+
+
+
 	return false;
 }
 

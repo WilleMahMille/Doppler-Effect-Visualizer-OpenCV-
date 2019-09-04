@@ -14,6 +14,12 @@ constexpr float pi = static_cast<float>(3.14159265358979323846); // pi
 
 class Wave;
 
+class Hitbox {
+public:
+	Hitbox(cv::Point pos, cv::Point boxSize) : position(pos), size(boxSize) {
+	}
+	cv::Point position, size;
+};
 
 class WaveParticle {
 	friend Wave;
@@ -22,8 +28,8 @@ public:
 private:
 	void UpdatePosition();
 	void Draw(cv::Mat img);
-	void Collide(cv::Rect hitbox);
-	bool CollidingWith(cv::Rect hitbox);
+	void Collide(Hitbox *hitbox);
+	bool CollidingWith(Hitbox *hitbox);
 	void MultiplyVelocity(int multiplier) { _velocity = _velocity * multiplier; }
 	void SetPosition(std::pair<float, float> pos) { _position = pos; }
 	
