@@ -38,7 +38,7 @@ private:
 class Wave {
 public:
 	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime); //wave constructor
-	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle> *particles); //particle wave constructor
+	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles); //particle wave constructor
 	void Frame();
 	void Draw(cv::Mat img);
 
@@ -56,7 +56,7 @@ private:
 	int _lifetime;
 
 	bool _particles = false;
-	std::vector<WaveParticle>* waveParticles;
+	std::vector<WaveParticle*>* waveParticles;
 
 	void IncreaseSize() { _size += _sizeIncrease; }
 	void UpdateSize() { _position += _cameraSpeed; }
@@ -91,7 +91,7 @@ private:
 	//int waveBounces = 0; //deprecated and not used in this program anymore
 	std::vector<Wave> waves;
 
-	std::vector<WaveParticle>* waveParticles;
+	std::vector<WaveParticle*>* waveParticles;
 	std::vector<std::pair<float, float>> particleVelocities;
 };
 

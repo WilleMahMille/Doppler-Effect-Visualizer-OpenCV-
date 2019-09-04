@@ -11,7 +11,6 @@ void WaveParticle::Draw(cv::Mat img) {
 }
 void WaveParticle::UpdatePosition() { 
 	_position += _velocity;
-	std::cout << "updated velocity\n"; //here is the error, probably
 }
 void WaveParticle::Collide(cv::Rect hitbox) {
 	return;
@@ -27,23 +26,20 @@ Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int life
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
 	
 }
-Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles) {
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles) {
 	if (particlesPerWave != particles->size()) {
 		std::cout << "error, particles size does not match particlesPerWave\n";
 	}
-	std::cout << "created wave\n";
 	_particles = true;
-	for (WaveParticle p : (*particles)) {
-		p.MultiplyVelocity(sizeIncrease);
-		p.SetPosition(position);
-		std::cout << "set position\n";
+	for (WaveParticle* p : *particles) {
+		p->MultiplyVelocity(sizeIncrease);
+		p->SetPosition(position);
 	}
-	std::cout << "wave created\n";
 }
 void Wave::Frame() {
 	if (_particles) {
-		for (WaveParticle wp : *waveParticles) {
-			wp.UpdatePosition();
+		for (WaveParticle *wp : *waveParticles) {
+			wp->UpdatePosition();
 		}
 	}
 	else {
@@ -53,8 +49,8 @@ void Wave::Frame() {
 }
 void Wave::Draw(cv::Mat img) {
 	if (_particles) {
-		for (WaveParticle wp : *waveParticles) {
-			wp.Draw(img);
+		for (WaveParticle *wp : *waveParticles) {
+			wp->Draw(img);
 		}
 	}
 	else {
@@ -104,8 +100,7 @@ void WaveSource::SpawnWave() {
 	currentWaveDelay += FrameDelay;
 	if (_particleWave) {
 		if (waveParticles == nullptr) {
-			std::cout << "created new waveParticle vector\n";
-			waveParticles = new std::vector<WaveParticle>();
+			waveParticles = new std::vector<WaveParticle*>();
 		}
 
 		int currentParticleVectorSize = waveParticles->size();
@@ -116,7 +111,7 @@ void WaveSource::SpawnWave() {
 		std::pair<float, float> pos(0, 0);
 		
 		for (int i = 0; i < wavesThisFrame; i++) {
-			waveParticles->push_back(WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
+			waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
 		}
 	}
 	else {
@@ -125,6 +120,13 @@ void WaveSource::SpawnWave() {
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
 		if (_particleWave) {
+			if (waveParticles->size() < particlesPerWave) {
+				std::pair<float, float> pos(0, 0);
+				int currentParticleVectorSize = waveParticles->size();
+				for (int i = 0; i < particlesPerWave - currentParticleVectorSize; i++) {
+					waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
+				}
+			}
 			waves.push_back(Wave(_cameraSpeed, std::pair<float, float>(_position.x, _position.y), _waveSpeed, _waveLifetime, waveParticles));
 			waveParticles = nullptr;
 		}

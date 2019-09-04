@@ -2,8 +2,8 @@
 
 
 int main(int argc, char* argv[]) {
-	
-	std::pair<float, float> pairOne(40, 40);
+	/*
+	std::pair<float, float> pairOne(40.86, 40);
 
 	std::pair<float, float> pairTwo(60, 60);
 
@@ -12,10 +12,10 @@ int main(int argc, char* argv[]) {
 
 	while (true) {
 		
-	}
+	}*/
 
-	//WaveSimulation waves = WaveSimulation();
-	//waves.RunSimulation();
+	WaveSimulation waves = WaveSimulation();
+	waves.RunSimulation();
 
 
 
