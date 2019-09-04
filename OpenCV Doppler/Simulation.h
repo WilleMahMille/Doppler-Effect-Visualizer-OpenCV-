@@ -39,6 +39,7 @@ class Wave {
 public:
 	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime); //wave constructor
 	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles); //particle wave constructor
+	~Wave();
 	void Frame();
 	void Draw(cv::Mat img);
 
@@ -52,7 +53,7 @@ private:
 	
 	const cv::Scalar *WaveColor = new cv::Scalar(255, 200, 100);
 	cv::Point _position, _cameraSpeed;
-	int _size = 10, _sizeIncrease;
+	int _size = 1, _sizeIncrease;
 	int _lifetime;
 
 	bool _particles = false;

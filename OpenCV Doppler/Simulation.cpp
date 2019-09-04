@@ -36,6 +36,9 @@ Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncr
 		p->SetPosition(position);
 	}
 }
+Wave::~Wave() {
+
+}
 void Wave::Frame() {
 	if (_particles) {
 		for (WaveParticle *wp : *waveParticles) {
@@ -54,7 +57,7 @@ void Wave::Draw(cv::Mat img) {
 		}
 	}
 	else {
-		cv::circle(img, _position, _size / 2, *WaveColor);
+		cv::circle(img, _position, _size, *WaveColor);
 	}
 }
 
@@ -91,7 +94,9 @@ void WaveSource::UpdateLifetime() {
 	for (int i = 0; i < waves.size(); i++) {
 		waves[i].LifetimeDecrease(FrameDelay);
 		if (waves[i].IsDead()) {
+			Wave &tempW = waves[i];
 			waves.erase(waves.begin() + i);
+			tempW.~Wave();
 			i--;
 		}
 	}
@@ -102,7 +107,6 @@ void WaveSource::SpawnWave() {
 		if (waveParticles == nullptr) {
 			waveParticles = new std::vector<WaveParticle*>();
 		}
-
 		int currentParticleVectorSize = waveParticles->size();
 		int waveSpawnDelayLeft = currentWaveDelay > _waveFrequency ? 0 : _waveFrequency - currentWaveDelay;
 		float framesLeft = static_cast<float>(waveSpawnDelayLeft) / FrameDelay;
