@@ -1,6 +1,9 @@
 #include "Simulation.h"
 #define _USE_MATH_DEFINES
 
+void Hitbox::Draw(cv::Mat img) {
+	cv::rectangle(img, cv::Rect(position, size), color, 1, -1);
+}
 
 WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
 }
@@ -13,18 +16,17 @@ void WaveParticle::UpdatePosition() {
 	_position += _velocity;
 }
 void WaveParticle::Collide(Hitbox *hitbox) {
-	
-	return;
+	if (CollidingWith(hitbox)) {
+		std::cout << "colliding with hitbox\n";
+	}
 }
 bool WaveParticle::CollidingWith(Hitbox *hitbox) {
-	
-
-
-
-
-	return false;
+	return 
+		hitbox->position.x <= _position.first + 1 && 
+		hitbox->position.x + hitbox->size.x >= hitbox->position.x - 1 && 
+		hitbox->position.y <= _position.second + 1 && 
+		hitbox->position.y + hitbox->size.y >= hitbox->position.x - 1;
 }
-
 
 
 Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime) {
@@ -33,6 +35,7 @@ Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int life
 	
 }
 Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles) {
+	std::cout << "creating wave\n";
 	if (particlesPerWave != particles->size()) {
 		std::cout << "error, particles size does not match particlesPerWave\n";
 	}
@@ -43,7 +46,13 @@ Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncr
 	}
 }
 Wave::~Wave() {
-
+	std::cout << "deconstructing wave\n";
+	if (waveParticles != nullptr) {
+		for (int i = 0; i < waveParticles->size(); i++) {
+			delete (*waveParticles)[i];
+		}
+	}
+	std::cout << "wave deconstructed\n";
 }
 void Wave::Frame() {
 	if (_particles) {
@@ -67,6 +76,7 @@ void Wave::Draw(cv::Mat img) {
 	}
 }
 
+
 WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
 	for (int i = 0; i < particlesPerWave; i++) {
 		float rad = 2 * pi * i / particlesPerWave;
@@ -85,8 +95,8 @@ void WaveSource::Frame(cv::Mat img) {
 	Draw(img);
 }
 void WaveSource::UpdatePositions() {
-	_position.x += -_cameraSpeed.x + _sourceSpeed.x * (reverseX > 0 ? -reverseX : 1);
-	_position.y += -_cameraSpeed.y - _sourceSpeed.y * (reverseY > 0 ? -reverseY : 1); //reverse y to create a mathematically logical coordinate system (pos y is up and pos x is right)
+	_position.x += -_cameraSpeed.x + _sourceSpeed.x;
+	_position.y += -_cameraSpeed.y - _sourceSpeed.y; //reverse y to create a mathematically logical coordinate system (pos y is up and pos x is right)
 	_position.x = _position.x < 0 ? 0 : _position.x;
 	_position.x = _position.x > _screenSize.x ? _screenSize.x : _position.x;
 	_position.y = _position.y < 0 ? 0 : _position.y;
@@ -113,12 +123,12 @@ void WaveSource::SpawnWave() {
 		if (waveParticles == nullptr) {
 			waveParticles = new std::vector<WaveParticle*>();
 		}
-		int currentParticleVectorSize = waveParticles->size();
+		int currentParticleVectorSize = static_cast<int>(waveParticles->size());
 		int waveSpawnDelayLeft = currentWaveDelay > _waveFrequency ? 0 : _waveFrequency - currentWaveDelay;
 		float framesLeft = static_cast<float>(waveSpawnDelayLeft) / FrameDelay;
 		int wavesLeft = particlesPerWave - currentParticleVectorSize;
 		int wavesThisFrame = static_cast<int>(wavesLeft / ceil(framesLeft));
-		std::pair<float, float> pos(0, 0);
+		std::pair<float, float> pos = std::pair<float, float>(static_cast<float>(0), static_cast<float>(0));
 		
 		for (int i = 0; i < wavesThisFrame; i++) {
 			waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
@@ -131,14 +141,18 @@ void WaveSource::SpawnWave() {
 		currentWaveDelay = 0;
 		if (_particleWave) {
 			if (waveParticles->size() < particlesPerWave) {
-				std::pair<float, float> pos(0, 0);
-				int currentParticleVectorSize = waveParticles->size();
+				std::pair<float, float> pos(static_cast<float>(0), static_cast<float>(0));
+				int currentParticleVectorSize = static_cast<int>(waveParticles->size());
+				std::cout << "wat is dis?\n";
 				for (int i = 0; i < particlesPerWave - currentParticleVectorSize; i++) {
 					waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
 				}
+				std::cout << "finished creating wave\n";
 			}
-			waves.push_back(Wave(_cameraSpeed, std::pair<float, float>(_position.x, _position.y), _waveSpeed, _waveLifetime, waveParticles));
-			waveParticles = nullptr;
+			std::cout << "dafok?\n";
+			waves.push_back(Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles));
+			waveParticles = nullptr; //deconstructor is called ??
+			std::cout << "created wave yadda yada\n";
 		}
 		else {
 			waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
@@ -162,9 +176,14 @@ void WaveSource::Draw(cv::Mat img) {
 		waves[i].Draw(img);
 	}
 }
+void WaveSource::AddHitbox(cv::Point position, cv::Point size) {
+	hitboxes.push_back(new Hitbox(position, size));
+}
+
+
 
 void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime) {
-	//old and deprecated
+	//old and deprecated (should be removed)
 	const char* commandWindowName = "Control Panel (deprecated)";
 
 	cv::namedWindow(commandWindowName, cv::WINDOW_FREERATIO);
@@ -185,7 +204,7 @@ WaveSimulation::WaveSimulation() {
 
 	ws = new WaveSource(cv::Point((windowWidth - controlPanelWidth ) / 2, windowHeight / 2), cv::Point(windowWidth - controlPanelWidth, windowHeight));
 	
-	//CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveFrequency, &ws->_waveSpeed, &ws->_waveLifetime); //old and deprecated
+	//CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveFrequency, &ws->_waveSpeed, &ws->_waveLifetime); //old and deprecated (should be removed)
 	ctrlP = new ControlPanel("Doppler effect", cv::Size(controlPanelWidth, windowHeight), cv::Point(windowWidth - controlPanelWidth, 0), _img);
 	
 	//setting the design for controlpanel

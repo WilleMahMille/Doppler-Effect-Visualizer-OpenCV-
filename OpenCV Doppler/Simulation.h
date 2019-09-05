@@ -14,11 +14,17 @@ constexpr float pi = static_cast<float>(3.14159265358979323846); // pi
 
 class Wave;
 
+//for positions:
+//x-positive = right
+//y-positive = down
+
 class Hitbox {
 public:
 	Hitbox(cv::Point pos, cv::Point boxSize) : position(pos), size(boxSize) {
 	}
+	void Draw(cv::Mat img);
 	cv::Point position, size;
+	cv::Scalar color = cv::Scalar(30, 100, 255);
 };
 
 class WaveParticle {
@@ -26,6 +32,7 @@ class WaveParticle {
 public:
 	WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color = cv::Scalar(255, 200, 100));
 private:
+	~WaveParticle() { std::cout << "called waveparticle deconstructor\n"; }
 	void UpdatePosition();
 	void Draw(cv::Mat img);
 	void Collide(Hitbox *hitbox);
@@ -86,20 +93,21 @@ private:
 	void SpawnWave();
 	void Draw(cv::Mat img);
 	void UpdateWaveSpeed() { _waveSpeed = _waveSpeed > 0 ? _waveSpeed : 1; }
-
+	void AddHitbox(cv::Point position, cv::Point size);
 
 	const int FrameDelay = 30;
 	const cv::Scalar WaveSourceColor = cv::Scalar(200, 29, 0);
 	cv::Point _position, _sourceSpeed, _cameraSpeed;
 	cv::Point _screenSize;
-	int reverseX = 0, reverseY = 0;
 	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
+
 	bool _particleWave = true;
+
 	//int waveBounces = 0; //deprecated and not used in this program anymore
 	std::vector<Wave> waves;
-
 	std::vector<WaveParticle*>* waveParticles;
 	std::vector<std::pair<float, float>> particleVelocities;
+	std::vector<Hitbox*> hitboxes;
 };
 
 class WaveSimulation {

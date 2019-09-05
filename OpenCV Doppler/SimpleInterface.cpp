@@ -66,8 +66,8 @@ bool TwoDTrackbar::IsClicked(cv::Point click, int type) {
 }
 void TwoDTrackbar::Click(cv::Point position, int type, int flag) {
 	if (flag == cv::EVENT_FLAG_LBUTTON) {
-		*_valOne = !lockX ? _bottomNumber.x	+ (position.x - _position.x) / _scale.first : *_valOne;
-		*_valTwo = !lockY ? _bottomNumber.y + (_size.y - position.y + _position.y) / _scale.second : *_valTwo;
+		*_valOne = static_cast<int>(!lockX ? _bottomNumber.x	+ (position.x - _position.x) / _scale.first : *_valOne);
+		*_valTwo = static_cast<int>(!lockY ? _bottomNumber.y + (_size.y - position.y + _position.y) / _scale.second : *_valTwo);
 	}
 }
 void TwoDTrackbar::Draw(cv::Mat img) {
@@ -89,7 +89,7 @@ Trackbar::Trackbar(cv::Point position, cv::Point size, int botNumber, int topNum
 	cv::line(trackbarImg, cv::Point(0, gradLinePos), cv::Point(size.x, gradLinePos), cv::Scalar(255, 255, 255));
 	double scaleY = size.y / 25;
 	for (int i = 0; i <= topNumber - botNumber; i++) {
-		int lineSize = _scale < 0.1 ? (i % 100 == 0 ? scaleY: 0) + (i % 500 == 0 ? scaleY : 0) + (i % 1000 == 0 ? scaleY : 0) : (scaleY + (i % 5 == 0 ? scaleY : 0) + (i % 10 == 0 ? scaleY : 0) + (i % 100 == 0 ? scaleY * 2 : 0));
+		int lineSize = static_cast<int>(_scale < 0.1 ? (i % 100 == 0 ? scaleY: 0) + (i % 500 == 0 ? scaleY : 0) + (i % 1000 == 0 ? scaleY : 0) : (scaleY + (i % 5 == 0 ? scaleY : 0) + (i % 10 == 0 ? scaleY : 0) + (i % 100 == 0 ? scaleY * 2 : 0)));
 		cv::line(trackbarImg, cv::Point(static_cast<int>(i * _scale), gradLinePos + lineSize), cv::Point(static_cast<int>(i * _scale), gradLinePos - lineSize), cv::Scalar(255, 255, 255));
 	}
 	
@@ -102,7 +102,7 @@ bool Trackbar::IsClicked(cv::Point click, int type) {
 }
 void Trackbar::Click(cv::Point click, int type, int flag) {
 	if (flag == cv::EVENT_FLAG_LBUTTON) {
-		*_value = _botNumber + (click.x - _position.x) / _scale;
+		*_value = static_cast<int>(_botNumber + (click.x - _position.x) / _scale);
 	}
 }
 void Trackbar::Draw(cv::Mat img) {
@@ -111,7 +111,7 @@ void Trackbar::Draw(cv::Mat img) {
 		return;
 	}
 	trackbarImg.copyTo(img(cv::Rect(_position.x, _position.y, _size.x, _size.y)));
-	cv::Point selectorPos = cv::Point(_position.x + (*_value - _botNumber) * _scale, _position.y + _size.y / 2);
+	cv::Point selectorPos = cv::Point(static_cast<int>(_position.x + (*_value - _botNumber) * _scale), static_cast<int>(_position.y + _size.y / 2));
 	cv::circle(img, selectorPos, 6, cv::Scalar(50, 255, 50), 2);
 
 }
