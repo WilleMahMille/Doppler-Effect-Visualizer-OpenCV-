@@ -51,7 +51,9 @@ Wave::~Wave() {
 		for (int i = 0; i < waveParticles->size(); i++) {
 			delete (*waveParticles)[i];
 		}
+		delete waveParticles;
 	}
+	
 	std::cout << "wave deconstructed\n";
 }
 void Wave::Frame() {
@@ -85,7 +87,7 @@ WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourc
 }
 void WaveSource::SetWaveSizeIncrease(int newIncrease) {
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i].SetSizeIncrease(newIncrease);
+		waves[i]->SetSizeIncrease(newIncrease);
 	}
 }
 void WaveSource::Frame(cv::Mat img) {
@@ -102,15 +104,15 @@ void WaveSource::UpdatePositions() {
 	_position.y = _position.y < 0 ? 0 : _position.y;
 	_position.y = _position.y > _screenSize.y ? _screenSize.y : _position.y;
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i].SetSpeed(-_cameraSpeed);
-		waves[i].Frame();
+		waves[i]->SetSpeed(-_cameraSpeed);
+		waves[i]->Frame();
 	}
 }
 void WaveSource::UpdateLifetime() {
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i].LifetimeDecrease(FrameDelay);
-		if (waves[i].IsDead()) {
-			Wave &tempW = waves[i];
+		waves[i]->LifetimeDecrease(FrameDelay);
+		if (waves[i]->IsDead()) {
+			Wave &tempW = (*waves[i]);
 			waves.erase(waves.begin() + i);
 			tempW.~Wave();
 			i--;
@@ -150,12 +152,12 @@ void WaveSource::SpawnWave() {
 				std::cout << "finished creating wave\n";
 			}
 			std::cout << "dafok?\n";
-			waves.push_back(Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles));
+			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles));
 			waveParticles = nullptr; //deconstructor is called ??
 			std::cout << "created wave yadda yada\n";
 		}
 		else {
-			waves.push_back(Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
+			waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
 		}
 		
 		//wave bounces, entertaining concept, but physically incorrect and not used in this program (anymore)
@@ -173,7 +175,7 @@ void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
 	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i].Draw(img);
+		waves[i]->Draw(img);
 	}
 }
 void WaveSource::AddHitbox(cv::Point position, cv::Point size) {
@@ -245,7 +247,7 @@ void WaveSimulation::SetCameraSpeed(cv::Point speed) {
 	ws->SetCameraSpeed(speed);
 }
 void WaveSimulation::RunSimulation() {
-	while (true) {
+	for(int i = 0; i < 150; i++) {
 		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC3);
 		ws->Frame(_img);
 		ctrlP->Draw();

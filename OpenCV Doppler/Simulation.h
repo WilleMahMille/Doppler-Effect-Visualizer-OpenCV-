@@ -104,7 +104,7 @@ private:
 	bool _particleWave = true;
 
 	//int waveBounces = 0; //deprecated and not used in this program anymore
-	std::vector<Wave> waves;
+	std::vector<Wave*> waves;
 	std::vector<WaveParticle*>* waveParticles;
 	std::vector<std::pair<float, float>> particleVelocities;
 	std::vector<Hitbox*> hitboxes;
