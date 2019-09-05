@@ -35,9 +35,8 @@ Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int life
 	
 }
 Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles) {
-	std::cout << "creating wave\n";
 	if (particlesPerWave != particles->size()) {
-		std::cout << "error, particles size does not match particlesPerWave\n";
+		std::cout << "Error, particles size does not match ParticlesPerWave\n";
 	}
 	_particles = true;
 	for (WaveParticle* p : *particles) {
@@ -46,15 +45,13 @@ Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncr
 	}
 }
 Wave::~Wave() {
-	std::cout << "deconstructing wave\n";
 	if (waveParticles != nullptr) {
 		for (int i = 0; i < waveParticles->size(); i++) {
 			delete (*waveParticles)[i];
 		}
 		delete waveParticles;
 	}
-	
-	std::cout << "wave deconstructed\n";
+	delete WaveColor;
 }
 void Wave::Frame() {
 	if (_particles) {
@@ -145,16 +142,12 @@ void WaveSource::SpawnWave() {
 			if (waveParticles->size() < particlesPerWave) {
 				std::pair<float, float> pos(static_cast<float>(0), static_cast<float>(0));
 				int currentParticleVectorSize = static_cast<int>(waveParticles->size());
-				std::cout << "wat is dis?\n";
 				for (int i = 0; i < particlesPerWave - currentParticleVectorSize; i++) {
 					waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
 				}
-				std::cout << "finished creating wave\n";
 			}
-			std::cout << "dafok?\n";
 			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles));
-			waveParticles = nullptr; //deconstructor is called ??
-			std::cout << "created wave yadda yada\n";
+			waveParticles = nullptr; 
 		}
 		else {
 			waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
@@ -183,7 +176,6 @@ void WaveSource::AddHitbox(cv::Point position, cv::Point size) {
 }
 
 
-
 void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime) {
 	//old and deprecated (should be removed)
 	const char* commandWindowName = "Control Panel (deprecated)";
@@ -198,6 +190,7 @@ void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* r
 	cv::createTrackbar("Wave Speed", commandWindowName, waveSpeed, 75);
 	cv::createTrackbar("Wave Lifetime", commandWindowName, waveLifetime, 10000);
 }
+
 
 WaveSimulation::WaveSimulation() {
 	_img = cv::Mat::zeros(cv::Size(windowWidth, windowHeight), CV_8UC3);
@@ -247,7 +240,7 @@ void WaveSimulation::SetCameraSpeed(cv::Point speed) {
 	ws->SetCameraSpeed(speed);
 }
 void WaveSimulation::RunSimulation() {
-	for(int i = 0; i < 150; i++) {
+	for (;;) {
 		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC3);
 		ws->Frame(_img);
 		ctrlP->Draw();
