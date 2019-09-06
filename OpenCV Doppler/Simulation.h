@@ -20,10 +20,10 @@ class Wave;
 
 class Hitbox {
 public:
-	Hitbox(cv::Point pos, cv::Point boxSize) : position(pos), size(boxSize) {
+	Hitbox(std::pair<float, float> pos, std::pair<float, float> boxSize) : position(pos), size(boxSize) {
 	}
 	void Draw(cv::Mat img);
-	cv::Point position, size;
+	std::pair<float, float> position, size;
 	cv::Scalar color = cv::Scalar(30, 100, 255);
 };
 

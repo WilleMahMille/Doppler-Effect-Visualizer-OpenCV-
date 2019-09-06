@@ -2,7 +2,9 @@
 #define _USE_MATH_DEFINES
 
 void Hitbox::Draw(cv::Mat img) {
-	cv::rectangle(img, cv::Rect(position, position + size), color, cv::FILLED, cv::LINE_8);
+	cv::Point pos = Resources::PairToPoint(position);
+	cv::Point boxSize = Resources::PairToPoint(size);
+	cv::rectangle(img, cv::Rect(pos, pos + boxSize), color, cv::FILLED, cv::LINE_8);
 }
 
 WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
@@ -20,9 +22,9 @@ void WaveParticle::Collide(Hitbox *hitbox) {
 		//update velocity
 		
 		float xDist, yDist;
-		cv::Point hitboxCenter = cv::Point(hitbox->position.x + hitbox->size.x / 2, hitbox->position.y + hitbox->size.y / 2);
-		xDist = (_position.first - (hitboxCenter.x)) / (hitbox->size.y / 2);
-		yDist = (_position.second - (hitboxCenter.y)) / (hitbox->size.y / 2);
+		std::pair<float, float> hitboxCenter = std::pair<float, float>(hitbox->position.first + hitbox->size.first / 2, hitbox->position.second + hitbox->size.second / 2);
+		xDist = (_position.first - hitboxCenter.first) / (hitbox->size.second / 2);
+		yDist = (_position.second - hitboxCenter.second) / (hitbox->size.second / 2);
 		if (abs(xDist) > abs(yDist)) {
 			_velocity.first *= -1;
 			//collision on x-edge
@@ -42,10 +44,10 @@ void WaveParticle::Collide(Hitbox *hitbox) {
 }
 bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 	return 
-		hitbox->position.x <= _position.first + 1 && 
-		hitbox->position.x + hitbox->size.x >= _position.first - 1 && 
-		hitbox->position.y <= _position.second + 1 && 
-		hitbox->position.y + hitbox->size.y >= _position.second - 1;
+		hitbox->position.first <= _position.first + 1 && 
+		hitbox->position.first + hitbox->size.first >= _position.first - 1 && 
+		hitbox->position.second <= _position.second + 1 && 
+		hitbox->position.second + hitbox->size.second >= _position.second - 1;
 }
 
 
@@ -100,7 +102,7 @@ void Wave::Draw(cv::Mat img) {
 
 
 WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
-	hitboxes.push_back(new Hitbox(cv::Point(600, 600), cv::Point(50, 50)));
+	hitboxes.push_back(new Hitbox(std::pair<float, float>(600, 600), std::pair<float, float>(50, 50)));
 	
 	for (int i = 0; i < particlesPerWave; i++) {
 		float rad = 2 * pi * i / particlesPerWave;
@@ -203,7 +205,7 @@ void WaveSource::Draw(cv::Mat img) {
 	}
 }
 void WaveSource::AddHitbox(cv::Point position, cv::Point size) {
-	hitboxes.push_back(new Hitbox(position, size));
+	hitboxes.push_back(new Hitbox(Resources::PointToPair(position), Resources::PointToPair(size)));
 }
 
 

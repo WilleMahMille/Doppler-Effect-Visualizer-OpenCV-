@@ -19,5 +19,6 @@ struct Resources {
 public:
 	static std::string GetWorkingDir();
 	static cv::Mat LoadImg(const char* imgName);
-
+	static std::pair<float, float> PointToPair(cv::Point point);
+	static cv::Point PairToPoint(std::pair<float, float> pair);
 };

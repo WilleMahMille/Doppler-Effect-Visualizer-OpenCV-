@@ -20,3 +20,9 @@ cv::Mat Resources::LoadImg(const char* imgName) {
 	return img;
 }
 
+std::pair<float, float> Resources::PointToPair(cv::Point point) {
+	return std::pair<float, float>(point.x, point.y);
+}
+cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
+	return cv::Point(static_cast<int>(pair.first), static_cast<int>(pair.second));
+}
