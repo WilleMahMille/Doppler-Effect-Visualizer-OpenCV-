@@ -145,7 +145,10 @@ void WaveSource::SpawnWave() {
 		}
 	}
 	else {
-		delete waveParticles;
+		if (waveParticles != nullptr) {
+			delete waveParticles;
+			waveParticles = nullptr;
+		}
 	}
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
@@ -230,6 +233,7 @@ WaveSimulation::WaveSimulation() {
 	cv::putText(controlPanelDesign, "ms:", cv::Point(290, 620), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "Wave lifetime", cv::Point(15, 715), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 715), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Simulate Particles:", cv::Point(15, 810), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 
 	//adding userinput elements
 	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-10, -10), cv::Point(10, 10), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
@@ -240,6 +244,8 @@ WaveSimulation::WaveSimulation() {
 	ctrlP->AddCheckBox(cv::Point(87, 52), ctrlP->GetTopLayer(), tdtb->GetLockX(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(187, 52), ctrlP->GetTopLayer(), tdtb->GetLockY(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(317, 52), ctrlP->GetTopLayer(), tdtb->GetToCenter(), cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(335, 785), ctrlP->GetTopLayer(), &ws->_particleWave, cv::Point(30, 30));
+
 	//adding dynamic texts
 	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValOne(), cv::Point(260, 35), 1.2));
 	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValTwo(), cv::Point(320, 35), 1.2));
