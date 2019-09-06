@@ -9,7 +9,7 @@
 constexpr int windowWidth = 1920; //screenwidth
 constexpr int windowHeight = 1020; //screenheight - 60 (windows taskbar)
 constexpr int controlPanelWidth = 400; //400 is standard
-constexpr int particlesPerWave = 360;
+constexpr int particlesPerWave = 1200;
 constexpr float pi = static_cast<float>(3.14159265358979323846); // pi
 
 class Wave;
@@ -53,7 +53,7 @@ public:
 	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime); //wave constructor
 	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles); //particle wave constructor
 	~Wave();
-	void Frame();
+	void Frame(std::vector<Hitbox*>* hitboxes);
 	void Draw(cv::Mat img);
 
 	void SetSizeIncrease(int sizeIncrease) { _sizeIncrease = sizeIncrease; }

@@ -2,7 +2,7 @@
 #define _USE_MATH_DEFINES
 
 void Hitbox::Draw(cv::Mat img) {
-	cv::rectangle(img, cv::Rect(position, size), color, 1, -1);
+	cv::rectangle(img, cv::Rect(position, position + size), color, cv::FILLED, cv::LINE_8);
 }
 
 WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
@@ -17,15 +17,21 @@ void WaveParticle::UpdatePosition() {
 }
 void WaveParticle::Collide(Hitbox *hitbox) {
 	if (CollidingWith(hitbox)) {
-		std::cout << "colliding with hitbox\n";
+		//update velocity
+		
+
+		_velocity = _velocity * -1;
+		do {
+			_position += _velocity;
+		} while (CollidingWith(hitbox));
 	}
 }
 bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 	return 
 		hitbox->position.x <= _position.first + 1 && 
-		hitbox->position.x + hitbox->size.x >= hitbox->position.x - 1 && 
+		hitbox->position.x + hitbox->size.x >= _position.first - 1 && 
 		hitbox->position.y <= _position.second + 1 && 
-		hitbox->position.y + hitbox->size.y >= hitbox->position.x - 1;
+		hitbox->position.y + hitbox->size.y >= _position.second - 1;
 }
 
 
@@ -53,10 +59,13 @@ Wave::~Wave() {
 	}
 	delete WaveColor;
 }
-void Wave::Frame() {
+void Wave::Frame(std::vector<Hitbox*>* hitboxes) {
 	if (_particles) {
 		for (WaveParticle *wp : *waveParticles) {
 			wp->UpdatePosition();
+			for (Hitbox* h : *hitboxes) {
+				wp->Collide(h);
+			}
 		}
 	}
 	else {
@@ -77,6 +86,8 @@ void Wave::Draw(cv::Mat img) {
 
 
 WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
+	hitboxes.push_back(new Hitbox(cv::Point(600, 600), cv::Point(50, 50)));
+	
 	for (int i = 0; i < particlesPerWave; i++) {
 		float rad = 2 * pi * i / particlesPerWave;
 		particleVelocities.push_back(std::make_pair<float, float>(cos(rad), sin(rad)));
@@ -102,7 +113,7 @@ void WaveSource::UpdatePositions() {
 	_position.y = _position.y > _screenSize.y ? _screenSize.y : _position.y;
 	for (int i = 0; i < waves.size(); i++) {
 		waves[i]->SetSpeed(-_cameraSpeed);
-		waves[i]->Frame();
+		waves[i]->Frame(&hitboxes);
 	}
 }
 void WaveSource::UpdateLifetime() {
@@ -170,6 +181,9 @@ void WaveSource::Draw(cv::Mat img) {
 	for (int i = 0; i < waves.size(); i++) {
 		waves[i]->Draw(img);
 	}
+	for (Hitbox* h : hitboxes) {
+		h->Draw(img);
+	}
 }
 void WaveSource::AddHitbox(cv::Point position, cv::Point size) {
 	hitboxes.push_back(new Hitbox(position, size));
@@ -218,10 +232,10 @@ WaveSimulation::WaveSimulation() {
 	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 715), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
 
 	//adding userinput elements
-	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-20, -20), cv::Point(20, 20), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
-	Trackbar *waveSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 530), cv::Point(350, 50), 0, 50, ctrlP->GetTopLayer(), &ws->_waveSpeed);
-	Trackbar *waveFrequencyTB = ctrlP->AddTrackbar(cv::Point(25, 630), cv::Point(350, 50), 0, 10000, ctrlP->GetTopLayer(), &ws->_waveFrequency);
-	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 725), cv::Point(350, 50), 0, 10000, ctrlP->GetTopLayer(), &ws->_waveLifetime);
+	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-10, -10), cv::Point(10, 10), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
+	Trackbar *waveSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 530), cv::Point(350, 50), 0, 10, ctrlP->GetTopLayer(), &ws->_waveSpeed);
+	Trackbar *waveFrequencyTB = ctrlP->AddTrackbar(cv::Point(25, 630), cv::Point(350, 50), 100, 7500, ctrlP->GetTopLayer(), &ws->_waveFrequency);
+	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 725), cv::Point(350, 50), 100, 5000, ctrlP->GetTopLayer(), &ws->_waveLifetime);
 
 	ctrlP->AddCheckBox(cv::Point(87, 52), ctrlP->GetTopLayer(), tdtb->GetLockX(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(187, 52), ctrlP->GetTopLayer(), tdtb->GetLockY(), cv::Point(15, 15));
