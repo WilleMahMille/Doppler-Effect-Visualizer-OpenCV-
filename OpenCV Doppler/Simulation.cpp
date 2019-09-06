@@ -19,11 +19,25 @@ void WaveParticle::Collide(Hitbox *hitbox) {
 	if (CollidingWith(hitbox)) {
 		//update velocity
 		
-
-		_velocity = _velocity * -1;
-		do {
+		float xDist, yDist;
+		cv::Point hitboxCenter = cv::Point(hitbox->position.x + hitbox->size.x / 2, hitbox->position.y + hitbox->size.y / 2);
+		xDist = (_position.first - (hitboxCenter.x)) / (hitbox->size.y / 2);
+		yDist = (_position.second - (hitboxCenter.y)) / (hitbox->size.y / 2);
+		if (abs(xDist) > abs(yDist)) {
+			_velocity.first *= -1;
+			//collision on x-edge
+		}
+		else if (abs(yDist) > abs(xDist)) {
+			_velocity.second *= -1;
+			//collision on y-edge
+		}
+		else if (abs(yDist) == abs(xDist)) {
+			_velocity = _velocity * -1;
+			//collision on corner
+		}
+		/*do {
 			_position += _velocity;
-		} while (CollidingWith(hitbox));
+		} while (CollidingWith(hitbox));*/
 	}
 }
 bool WaveParticle::CollidingWith(Hitbox *hitbox) {
