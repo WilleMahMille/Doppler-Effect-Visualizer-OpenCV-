@@ -32,7 +32,7 @@ class WaveParticle {
 public:
 	WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color = cv::Scalar(255, 200, 100));
 private:
-	~WaveParticle() { std::cout << "called waveparticle deconstructor\n"; }
+	~WaveParticle() { }
 	void UpdatePosition();
 	void Draw(cv::Mat img);
 	void Collide(Hitbox *hitbox);
