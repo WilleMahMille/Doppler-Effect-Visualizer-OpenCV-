@@ -10,8 +10,9 @@ void Hitbox::Draw(cv::Mat img) {
 WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
 }
 void WaveParticle::Draw(cv::Mat img) {
+	//will crash if size = 0
 	cv::Point pointPos = cv::Point(static_cast<int>(_position.first), static_cast<int>(_position.second));
-	cv::rectangle(img, cv::Rect(pointPos - cv::Point(1, 1), pointPos + cv::Point(1, 1)), cv::Scalar(200, 200, 200), -1);
+	cv::rectangle(img, cv::Rect(pointPos, pointPos + cv::Point(waveSize - 1, waveSize - 1)), cv::Scalar(200, 200, 200), -1);
 	//cv::line(img, _position, _position + cv::Point(1, 1), _color);
 }
 void WaveParticle::UpdatePosition() { 
@@ -32,25 +33,30 @@ void WaveParticle::Collide(Hitbox *hitbox) {
 			//collision on x-edge
 			//"enforce" hitbox
 			if (xDist > 0) {
-				_position.first -= 2 * (_position.first - 1 - hitbox->position.first - hitbox->size.first);
+				
+				_position.first -= 2 * (_position.first - hitbox->position.first - hitbox->size.first);
 			}
 			else {
-				_position.first -= 2 * (_position.first + 1 - hitbox->position.first);
+				_position.first -= 2 * (_position.first + waveSize - hitbox->position.first);
 			}
 			//update velocity
-			_velocity.first *= -1;
+			if (!((_velocity.first > 0 && xDist > 0) || (_velocity.first < 0 && xDist < 0))) {
+				_velocity.first *= -1;
+			}
 		}
 		else if (abs(yDist) > abs(xDist)) {
 			//collision on y-edge
 			//"enforce" hitbox
 			if (yDist > 0) {
-				_position.second -= 2 * (_position.second - 1 - hitbox->position.second - hitbox->size.second);
+				_position.second -= 2 * (_position.second - hitbox->position.second - hitbox->size.second);
 			}
 			else {
-				_position.second -= 2 * (_position.second + 1 - hitbox->position.second);
+				_position.second -= 2 * (_position.second + waveSize - hitbox->position.second);
 			}
 			//update velocity
-			_velocity.second *= -1;
+			if (!((_velocity.second > 0 && yDist > 0) || (_velocity.second < 0 && yDist < 0))) {
+				_velocity.second *= -1;
+			}
 		}
 		else if (abs(yDist) == abs(xDist)) {
 			//collision on corner (should probably remove)
@@ -60,19 +66,19 @@ void WaveParticle::Collide(Hitbox *hitbox) {
 }
 bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 	return 
-		hitbox->position.first <= _position.first + 1 && 
-		hitbox->position.first + hitbox->size.first >= _position.first - 1 && 
-		hitbox->position.second <= _position.second + 1 && 
-		hitbox->position.second + hitbox->size.second >= _position.second - 1;
+		hitbox->position.first <= _position.first + waveSize && 
+		hitbox->position.first + hitbox->size.first >= _position.first && 
+		hitbox->position.second <= _position.second + waveSize && 
+		hitbox->position.second + hitbox->size.second >= _position.second;
 }
 
 
-Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime) {
+Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), waveSize(size) {
 	
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
 	
 }
-Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles) {
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles, int size) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles), waveSize(size) {
 	if (particlesPerWave != particles->size()) {
 		std::cout << "Error, particles size does not match ParticlesPerWave\n";
 	}
@@ -80,6 +86,7 @@ Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncr
 	for (WaveParticle* p : *particles) {
 		p->MultiplyVelocity(sizeIncrease);
 		p->SetPosition(position);
+		p->SetSize(size);
 	}
 }
 Wave::~Wave() {
@@ -110,9 +117,9 @@ void Wave::Draw(cv::Mat img) {
 		for (WaveParticle *wp : *waveParticles) {
 			wp->Draw(img);
 		}
-	}
+	}	
 	else {
-		cv::circle(img, _position, _size, *WaveColor);
+		cv::ellipse(img, _position, cv::Size(_size, _size), 0, 0, 360, *WaveColor, waveSize);
 	}
 }
 
@@ -192,7 +199,7 @@ void WaveSource::SpawnWave() {
 					waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
 				}
 			}
-			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles));
+			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles, 5));
 			waveParticles = nullptr; 
 		}
 		else {

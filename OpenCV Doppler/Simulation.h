@@ -39,19 +39,19 @@ private:
 	bool CollidingWith(Hitbox *hitbox);
 	void MultiplyVelocity(int multiplier) { _velocity = _velocity * multiplier; }
 	void SetPosition(std::pair<float, float> pos) { _position = pos; }
-	
+	void SetSize(int size) { waveSize = size; }
 
 	cv::Scalar _color;
 	cv::Point _cameraSpeed;
 	std::pair<float, float> _velocity, _position;
-	double size;
+	int waveSize = 3;
 };
 
 
 class Wave {
 public:
-	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime); //wave constructor
-	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles); //particle wave constructor
+	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size = 3); //wave constructor
+	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles, int size = 3); //particle wave constructor
 	~Wave();
 	void Frame(std::vector<Hitbox*>* hitboxes);
 	void Draw(cv::Mat img);
@@ -66,9 +66,8 @@ private:
 	
 	const cv::Scalar *WaveColor = new cv::Scalar(255, 200, 100);
 	cv::Point _position, _cameraSpeed;
-	int _size = 1, _sizeIncrease;
+	int _size = 1, _sizeIncrease, waveSize;
 	int _lifetime;
-
 	bool _particles = false;
 	std::vector<WaveParticle*>* waveParticles;
 
