@@ -25,21 +25,37 @@ void WaveParticle::Collide(Hitbox *hitbox) {
 		std::pair<float, float> hitboxCenter = std::pair<float, float>(hitbox->position.first + hitbox->size.first / 2, hitbox->position.second + hitbox->size.second / 2);
 		xDist = (_position.first - hitboxCenter.first) / (hitbox->size.second / 2);
 		yDist = (_position.second - hitboxCenter.second) / (hitbox->size.second / 2);
+
+		//move the waveparticle out of the hitbox the same amount that it's in (enforce hitbox is what I would call it)
+
 		if (abs(xDist) > abs(yDist)) {
-			_velocity.first *= -1;
 			//collision on x-edge
+			//"enforce" hitbox
+			if (xDist > 0) {
+				_position.first -= 2 * (_position.first - 1 - hitbox->position.first - hitbox->size.first);
+			}
+			else {
+				_position.first -= 2 * (_position.first + 1 - hitbox->position.first);
+			}
+			//update velocity
+			_velocity.first *= -1;
 		}
 		else if (abs(yDist) > abs(xDist)) {
-			_velocity.second *= -1;
 			//collision on y-edge
+			//"enforce" hitbox
+			if (yDist > 0) {
+				_position.second -= 2 * (_position.second - 1 - hitbox->position.second - hitbox->size.second);
+			}
+			else {
+				_position.second -= 2 * (_position.second + 1 - hitbox->position.second);
+			}
+			//update velocity
+			_velocity.second *= -1;
 		}
 		else if (abs(yDist) == abs(xDist)) {
+			//collision on corner (should probably remove)
 			_velocity = _velocity * -1;
-			//collision on corner
 		}
-		/*do {
-			_position += _velocity;
-		} while (CollidingWith(hitbox));*/
 	}
 }
 bool WaveParticle::CollidingWith(Hitbox *hitbox) {
@@ -78,10 +94,10 @@ Wave::~Wave() {
 void Wave::Frame(std::vector<Hitbox*>* hitboxes) {
 	if (_particles) {
 		for (WaveParticle *wp : *waveParticles) {
-			wp->UpdatePosition();
 			for (Hitbox* h : *hitboxes) {
 				wp->Collide(h);
 			}
+			wp->UpdatePosition();
 		}
 	}
 	else {
