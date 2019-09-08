@@ -40,6 +40,7 @@ private:
 	void MultiplyVelocity(int multiplier) { _velocity = _velocity * multiplier; }
 	void SetPosition(std::pair<float, float> pos) { _position = pos; }
 	void SetSize(int size) { waveSize = size; }
+	void SetColor(cv::Scalar color) { _color = color; }
 
 	cv::Scalar _color;
 	cv::Point _cameraSpeed;
@@ -50,8 +51,9 @@ private:
 
 class Wave {
 public:
-	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size = 3); //wave constructor
-	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles, int size = 3); //particle wave constructor
+	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size = 3, std::vector<cv::Scalar*>* lightColor = nullptr); //wave constructor
+	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles, int size = 3, std::vector<cv::Scalar*>* lightColor = nullptr); //particle wave constructor
+	
 	~Wave();
 	void Frame(std::vector<Hitbox*>* hitboxes);
 	void Draw(cv::Mat img);
@@ -68,11 +70,13 @@ private:
 	cv::Point _position, _cameraSpeed;
 	int _size = 1, _sizeIncrease, waveSize;
 	int _lifetime;
-	bool _particles = false;
+	bool _particles = false, light = false;
 	std::vector<WaveParticle*>* waveParticles;
 
 	void IncreaseSize() { _size += _sizeIncrease; }
 	void UpdateSize() { _position += _cameraSpeed; }
+
+	std::vector<cv::Scalar*>* _lightColor;
 };
 
 class WaveSource {
@@ -100,7 +104,7 @@ private:
 	cv::Point _screenSize;
 	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
 
-	bool _particleWave = true;
+	bool _particleWave = false, _lightWave = false;
 
 	//int waveBounces = 0; //deprecated and not used in this program anymore
 	std::vector<Wave*> waves;
