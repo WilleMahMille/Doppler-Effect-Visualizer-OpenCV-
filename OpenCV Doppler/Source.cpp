@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
 	while (true) {
 		
 	}*/
-
+	Resources::GetWavelengthToRgbMap(2);
 	WaveSimulation waves = WaveSimulation();
 	waves.RunSimulation();
 

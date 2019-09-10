@@ -74,24 +74,28 @@ bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 
 
 Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size, std::vector<cv::Scalar*>* lightColor) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), waveSize(size), _lightColor(lightColor) {
-
-	if (particlesPerWave != lightColor->size()) {
-		std::cout << "Error, lightColor size does equal 360\n";
+	
+	light = lightColor != nullptr;
+	if (light) {
+		if (particlesPerWave != lightColor->size()) {
+			std::cout << "Error, lightColor size does equal 360\n";
+		}
 	}
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
-	light = lightColor != nullptr;
 
 }
 Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar*>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
 	if (particlesPerWave != particles->size()) {
 		std::cout << "Error, particles size does not match ParticlesPerWave\n";
 	}
-	if (particlesPerWave != lightColor->size()) {
-		std::cout << "Error, lightColor size does not match particlesPerWave\n";
+	light = lightColor != nullptr;
+	if (light) {
+		if (particlesPerWave != lightColor->size()) {
+			std::cout << "Error, lightColor size does not match particlesPerWave\n";
+		}
 	}
 
 	_particles = true;
-	light = lightColor != nullptr;
 	if (light) {
 		for (int i = 0; i < particles->size(); i++) {
 			(*particles)[i]->SetColor(*((*lightColor)[i]));

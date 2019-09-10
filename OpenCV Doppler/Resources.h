@@ -2,6 +2,8 @@
 
 #include <Windows.h>
 #include <iostream>
+#include <iterator>
+#include <map>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 
@@ -21,4 +23,7 @@ public:
 	static cv::Mat LoadImg(const char* imgName);
 	static std::pair<float, float> PointToPair(cv::Point point);
 	static cv::Point PairToPoint(std::pair<float, float> pair);
+	static std::map<float, cv::Scalar>* GetWavelengthToRgbMap(float accuracy);
+	//accuracy, how many colors per nm in wavelength, accuracy of 2 means 2 colors per nm, 1 per 0.5nm
+	static cv::Scalar GetRgbFromWavelength(float wavelength);
 };
