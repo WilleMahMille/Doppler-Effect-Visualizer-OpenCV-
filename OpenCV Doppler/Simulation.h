@@ -111,6 +111,7 @@ private:
 	std::vector<WaveParticle*>* waveParticles;
 	std::vector<std::pair<float, float>> particleVelocities;
 	std::vector<Hitbox*> hitboxes;
+	std::map<float, cv::Scalar> *wavelengthMap;
 };
 
 class WaveSimulation {

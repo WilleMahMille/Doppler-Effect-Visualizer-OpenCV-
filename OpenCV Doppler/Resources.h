@@ -6,6 +6,8 @@
 #include <map>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+constexpr float standardWavelength = 500;
+
 
 inline std::pair<float, float> operator *(std::pair<float, float> p, int i) {
 	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
@@ -26,4 +28,6 @@ public:
 	static std::map<float, cv::Scalar>* GetWavelengthToRgbMap(float accuracy);
 	//accuracy, how many colors per nm in wavelength, accuracy of 2 means 2 colors per nm, 1 per 0.5nm
 	static cv::Scalar GetRgbFromWavelength(float wavelength);
+	static float GetWavelengthFromVelocity(cv::Point velocity);
+
 };

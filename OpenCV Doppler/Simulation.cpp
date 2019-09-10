@@ -144,7 +144,8 @@ void Wave::Draw(cv::Mat img) {
 
 WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
 	hitboxes.push_back(new Hitbox(std::pair<float, float>(600, 600), std::pair<float, float>(50, 50)));
-	
+	wavelengthMap = Resources::GetWavelengthToRgbMap(2);
+
 	for (int i = 0; i < particlesPerWave; i++) {
 		float rad = 2 * pi * i / particlesPerWave;
 		particleVelocities.push_back(std::make_pair<float, float>(cos(rad), sin(rad)));
