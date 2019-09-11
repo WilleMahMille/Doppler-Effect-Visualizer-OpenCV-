@@ -137,7 +137,16 @@ void Wave::Draw(cv::Mat img) {
 		}
 	}
 	else {
-		cv::ellipse(img, _position, cv::Size(_size, _size), 0, 0, 360, *WaveColor, waveSize);
+		if (light) {
+			float angleStep = 360 / static_cast<float>(particlesPerWave);
+			for (int i = 0; i < particlesPerWave; i++) {
+				cv::ellipse(img, _position, cv::Size(_size, _size), 0, i * angleStep, (i + 1) * angleStep, *WaveColor, waveSize);
+			}
+		}
+		else {
+			cv::ellipse(img, _position, cv::Size(_size, _size), 0, 0, 360, *WaveColor, waveSize);
+
+		}
 	}
 }
 
@@ -214,10 +223,15 @@ void WaveSource::SpawnWave() {
 	}
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
+		
 		std::vector<cv::Scalar*>* lightColor = new std::vector<cv::Scalar*>();
 		if (_lightWave) {
 			for (int i = 0; i < particlesPerWave; i++) {
 
+				const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
+
+
+				
 			}
 		}
 

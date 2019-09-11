@@ -78,7 +78,11 @@ cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
 	return cv::Point(static_cast<int>(pair.first), static_cast<int>(pair.second));
 }
 
-float Resources::GetWavelengthFromVelocity(cv::Point velocity) {
+float Resources::GetWavelengthFromVelocity(std::pair<float, float> position, cv::Point velocity) {
+
+
 	float absVel = sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+	float wavelength = standardWavelength * (c - absVel) / (c);
+	return wavelength;
 
 }
