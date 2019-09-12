@@ -224,13 +224,14 @@ void WaveSource::SpawnWave() {
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
 		
-		std::vector<cv::Scalar*>* lightColor = new std::vector<cv::Scalar*>();
+		std::vector<cv::Scalar>* lightColor = new std::vector<cv::Scalar>();
 		if (_lightWave) {
 			for (int i = 0; i < particlesPerWave; i++) {
 
-				const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
-
-
+				//const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
+				float wavelength = 380 + i; //test that it works
+				cv::Scalar rgb = wavelengthMap->at(wavelength);
+				std::cout << "testing\n";
 				
 			}
 		}

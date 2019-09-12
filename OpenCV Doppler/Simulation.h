@@ -104,7 +104,7 @@ private:
 	cv::Point _screenSize;
 	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
 
-	bool _particleWave = false, _lightWave = false;
+	bool _particleWave = false, _lightWave = true;
 
 	//int waveBounces = 0; //deprecated and not used in this program anymore
 	std::vector<Wave*> waves;

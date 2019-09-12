@@ -79,7 +79,7 @@ cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
 }
 
 float Resources::GetWavelengthFromVelocity(std::pair<float, float> position, cv::Point velocity) {
-
+	//needs a different implementation
 
 	float absVel = sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
 	float wavelength = standardWavelength * (c - absVel) / (c);
