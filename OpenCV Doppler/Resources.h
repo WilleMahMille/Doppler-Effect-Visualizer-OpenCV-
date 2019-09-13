@@ -28,6 +28,6 @@ public:
 	static std::map<float, cv::Scalar>* GetWavelengthToRgbMap(float accuracy);
 	//accuracy, how many colors per nm in wavelength, accuracy of 2 means 2 colors per nm, 1 per 0.5nm
 	static cv::Scalar GetRgbFromWavelength(float wavelength);
-	static float GetWavelengthFromVelocity(std::pair<float, float> position, cv::Point velocity); //position required
+	static float GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity); //position required
 
 };

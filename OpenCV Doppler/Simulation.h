@@ -51,8 +51,8 @@ private:
 
 class Wave {
 public:
-	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size = 3, std::vector<cv::Scalar*>* lightColor = nullptr); //wave constructor
-	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles, int size = 3, std::vector<cv::Scalar*>* lightColor = nullptr); //particle wave constructor
+	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size = 3, std::vector<cv::Scalar>* lightColor = nullptr); //wave constructor
+	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles, int size = 3, std::vector<cv::Scalar>* lightColor = nullptr); //particle wave constructor
 	
 	~Wave();
 	void Frame(std::vector<Hitbox*>* hitboxes);
@@ -76,7 +76,7 @@ private:
 	void IncreaseSize() { _size += _sizeIncrease; }
 	void UpdateSize() { _position += _cameraSpeed; }
 
-	std::vector<cv::Scalar*>* _lightColor;
+	std::vector<cv::Scalar>* _lightColor;
 };
 
 class WaveSource {

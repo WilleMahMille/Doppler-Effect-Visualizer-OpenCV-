@@ -78,11 +78,21 @@ cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
 	return cv::Point(static_cast<int>(pair.first), static_cast<int>(pair.second));
 }
 
-float Resources::GetWavelengthFromVelocity(std::pair<float, float> position, cv::Point velocity) {
+float Resources::GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity) {
 	//needs a different implementation
-
+	if (velocity.x == 0) {
+		return standardWavelength;
+	}
+	const float multiplier = c / 100;
 	float absVel = sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-	float wavelength = standardWavelength * (c - absVel) / (c);
-	return wavelength;
+	float angleOne = atan(deltaPosition.second / deltaPosition.first);
+	float angleTwo = atan(velocity.y / static_cast<float>(velocity.x));
+	float angleThree = angleOne - angleTwo;
+	float relativeYVelocity = sin(angleThree) * absVel;
+	float relativeXVelocity = cos(angleThree) * absVel;
+	float relativeVel = relativeXVelocity - relativeYVelocity;
+	relativeVel *= multiplier;
 
+	float wavelength = standardWavelength * (c - relativeVel) / (c);
+	return wavelength;
 }

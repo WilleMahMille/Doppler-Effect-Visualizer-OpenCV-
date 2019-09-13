@@ -73,7 +73,7 @@ bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 }
 
 
-Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size, std::vector<cv::Scalar*>* lightColor) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), waveSize(size), _lightColor(lightColor) {
+Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), waveSize(size), _lightColor(lightColor) {
 	
 	light = lightColor != nullptr;
 	if (light) {
@@ -84,7 +84,7 @@ Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int life
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
 
 }
-Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar*>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
 	if (particlesPerWave != particles->size()) {
 		std::cout << "Error, particles size does not match ParticlesPerWave\n";
 	}
@@ -98,7 +98,7 @@ Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncr
 	_particles = true;
 	if (light) {
 		for (int i = 0; i < particles->size(); i++) {
-			(*particles)[i]->SetColor(*((*lightColor)[i]));
+			(*particles)[i]->SetColor((*lightColor)[i]);
 		}
 	}
 	for (WaveParticle* p : *particles) {
@@ -140,7 +140,7 @@ void Wave::Draw(cv::Mat img) {
 		if (light) {
 			float angleStep = 360 / static_cast<float>(particlesPerWave);
 			for (int i = 0; i < particlesPerWave; i++) {
-				cv::ellipse(img, _position, cv::Size(_size, _size), 0, i * angleStep, (i + 1) * angleStep, *WaveColor, waveSize);
+				cv::ellipse(img, _position, cv::Size(_size, _size), 0, i * angleStep, (i + 1) * angleStep, (*_lightColor)[i], waveSize);
 			}
 		}
 		else {
@@ -228,9 +228,12 @@ void WaveSource::SpawnWave() {
 		if (_lightWave) {
 			for (int i = 0; i < particlesPerWave; i++) {
 
+				float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
+
 				//const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
-				float wavelength = 380 + i; //test that it works
-				cv::Scalar rgb = wavelengthMap->at(wavelength);
+				
+				cv::Scalar rgb = wavelengthMap->at(round(wavelength));
+				lightColor->push_back(rgb);
 				std::cout << "testing\n";
 				
 			}
@@ -248,7 +251,13 @@ void WaveSource::SpawnWave() {
 			waveParticles = nullptr; 
 		}
 		else {
-			waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
+			if (!_lightWave) {
+				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
+			}
+			else {
+				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, 3, lightColor));
+
+			}
 		}
 		
 		//wave bounces, entertaining concept, but physically incorrect and not used in this program (anymore)
