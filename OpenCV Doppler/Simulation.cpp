@@ -231,10 +231,14 @@ void WaveSource::SpawnWave() {
 				float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
 
 				//const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
-				
+				if (wavelength < 380) {
+					wavelength = 380;
+				}
+				if (wavelength > 780) {
+					wavelength = 780;
+				}
 				cv::Scalar rgb = wavelengthMap->at(round(wavelength));
 				lightColor->push_back(rgb);
-				std::cout << "testing\n";
 				
 			}
 		}

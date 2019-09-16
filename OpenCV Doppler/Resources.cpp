@@ -23,52 +23,55 @@ cv::Mat Resources::LoadImg(const char* imgName) {
 std::map<float, cv::Scalar>* Resources::GetWavelengthToRgbMap(float accuracy) {
 	std::map<float, cv::Scalar> *map = new std::map<float, cv::Scalar>();
 
-	const int base = 380; //280 nM
+	const int base = 380; //380 nM
 	for (int i = 0; i < 400 * accuracy; i++) {
 		map->insert(std::make_pair<float, cv::Scalar>(base + i / accuracy, GetRgbFromWavelength(base + i / accuracy)));
-		std::cout << "test\n";
 	}
 	return map;
 }
 
 cv::Scalar Resources::GetRgbFromWavelength(float wavelength) {
-	cv::Scalar bgr = cv::Scalar(0, 0, 0); //bgr is opencv's standard (and windows')
 	float gamma = 0.8;
-
+	float red = 0;
+	float green = 0;
+	float blue = 0;
 	if (wavelength >= 380 && wavelength <= 440) {
 		float attenuation = 0.3 + 0.7 * (wavelength - 380) / (440 - 380);
-		bgr[2] = pow((-(wavelength - 440) / (440 - 380)) * attenuation, gamma);
+		red = pow((-(wavelength - 440) / (440 - 380)) * attenuation, gamma);
 		//green = 0
-		bgr[0] = pow(attenuation, gamma);
+		blue = pow(attenuation, gamma);
 	}
 	else if (wavelength >= 440 && wavelength <= 490) {
 		//red = 0
-		bgr[1] = pow((wavelength - 440) / (490 - 440), gamma);
-		bgr[2] = 1;
+		green = pow((wavelength - 440) / (490 - 440), gamma);
+		blue = 1;
 	}
 	else if (wavelength >= 490 && wavelength <= 510) {
 		//red = 0
-		bgr[1] = 1;
-		bgr[2] = pow((-wavelength - 510) / (510 - 490), gamma);
+		green = 1;
+		blue = pow(-(wavelength - 510) / (510 - 490), gamma);
+		
 	}
 	else if (wavelength >= 510 && wavelength <= 580) {
-		bgr[2] = pow((wavelength - 510) / (580 - 510), gamma);
-		bgr[1] = 1;
+		red = pow((wavelength - 510) / (580 - 510), gamma);
+		green = 1;
 		//blue = 0
 	}
 	else if (wavelength >= 580 && wavelength <= 645) {
-		bgr[2] = 1;
-		bgr[1] = pow((-wavelength - 645) / (645 - 580), gamma);
+		red = 1;
+		green = pow(-(wavelength - 645) / (645 - 580), gamma);
 		//blue = 0
 	}
 	else if (wavelength >= 645 && wavelength <= 750) {
 		float attenuation = 0.3 + 0.7 * (750 - wavelength) / (750 - 645);
-		bgr[2] = pow(attenuation, gamma);
+		red = pow(attenuation, gamma);
 		//green = 0
 		//blue = 0
 	}
-	bgr *= 255;
-	return bgr;
+
+	cv::Scalar rgb = cv::Scalar(red, green, blue); //bgr is opencv's standard (and windows')
+	rgb *= 255;
+	return rgb;
 }
 
 std::pair<float, float> Resources::PointToPair(cv::Point point) {
@@ -80,19 +83,20 @@ cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
 
 float Resources::GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity) {
 	//needs a different implementation
-	if (velocity.x == 0) {
-		return standardWavelength;
-	}
-	const float multiplier = c / 100;
-	float absVel = sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-	float angleOne = atan(deltaPosition.second / deltaPosition.first);
-	float angleTwo = atan(velocity.y / static_cast<float>(velocity.x));
-	float angleThree = angleOne - angleTwo;
-	float relativeYVelocity = sin(angleThree) * absVel;
-	float relativeXVelocity = cos(angleThree) * absVel;
-	float relativeVel = relativeXVelocity - relativeYVelocity;
-	relativeVel *= multiplier;
+	//still incorrect,  but probably less incorrect
+	const float multiplier = c / 50;
+	
+	float vFinalX = deltaPosition.first * velocity.x - deltaPosition.second * velocity.x;
+	float vFinalY = deltaPosition.second * velocity.y - deltaPosition.first * velocity.y;
 
-	float wavelength = standardWavelength * (c - relativeVel) / (c);
+	float relativeVelocity = vFinalX + vFinalY;
+	
+	relativeVelocity *= multiplier;
+
+	float wavelength = standardWavelength * (c - relativeVelocity) / (c);
+	
+	if (velocity.x == velocity.y) {
+		std::cout << " \n";
+	}
 	return wavelength;
 }

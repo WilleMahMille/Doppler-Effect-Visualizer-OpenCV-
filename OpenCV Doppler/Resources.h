@@ -6,7 +6,7 @@
 #include <map>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
-constexpr float standardWavelength = 500;
+constexpr float standardWavelength = 450;
 constexpr float c = 299792458;
 
 inline std::pair<float, float> operator *(std::pair<float, float> p, int i) {
