@@ -68,10 +68,10 @@ cv::Scalar Resources::GetRgbFromWavelength(float wavelength) {
 		//green = 0
 		//blue = 0
 	}
-
-	cv::Scalar rgb = cv::Scalar(red, green, blue); //bgr is opencv's standard (and windows')
-	rgb *= 255;
-	return rgb;
+	
+	cv::Scalar bgr = cv::Scalar(blue, green, red); //bgr is opencv's standard (and windows')
+	bgr *= 255;
+	return bgr;
 }
 
 std::pair<float, float> Resources::PointToPair(cv::Point point) {
@@ -84,19 +84,18 @@ cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
 float Resources::GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity) {
 	//needs a different implementation
 	//still incorrect,  but probably less incorrect
-	const float multiplier = c / 50;
 	
-	float vFinalX = deltaPosition.first * velocity.x - deltaPosition.second * velocity.x;
-	float vFinalY = deltaPosition.second * velocity.y - deltaPosition.first * velocity.y;
+	float vFinalX = deltaPosition.first * velocity.x;
+	float vFinalY = deltaPosition.second * velocity.y;
 
 	float relativeVelocity = vFinalX + vFinalY;
 	
 	relativeVelocity *= multiplier;
-
-	float wavelength = standardWavelength * (c - relativeVelocity) / (c);
-	
-	if (velocity.x == velocity.y) {
-		std::cout << " \n";
+	if (velocity.x != velocity.y && velocity.x != 0) {
+		std::cout << "movement detected\n";
 	}
+	float wavelength = standardWavelength * sqrt((1 - relativeVelocity / c) / (1 + relativeVelocity / c));
+	//I believe the problem is the wavelength equation
+
 	return wavelength;
 }

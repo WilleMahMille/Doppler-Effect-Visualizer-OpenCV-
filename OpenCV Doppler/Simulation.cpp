@@ -1,4 +1,5 @@
 #include "Simulation.h"
+#include <opencv2/core/ocl.hpp>
 #define _USE_MATH_DEFINES
 
 void Hitbox::Draw(cv::Mat img) {
@@ -142,6 +143,7 @@ void Wave::Draw(cv::Mat img) {
 			for (int i = 0; i < particlesPerWave; i++) {
 				cv::ellipse(img, _position, cv::Size(_size, _size), 0, i * angleStep, (i + 1) * angleStep, (*_lightColor)[i], waveSize);
 			}
+			
 		}
 		else {
 			cv::ellipse(img, _position, cv::Size(_size, _size), 0, 0, 360, *WaveColor, waveSize);
@@ -166,10 +168,16 @@ void WaveSource::SetWaveSizeIncrease(int newIncrease) {
 	}
 }
 void WaveSource::Frame(cv::Mat img) {
+
+	cv::TickMeter timer = cv::TickMeter();
+	timer.start();
+
 	SpawnWave();
 	UpdateLifetime();
 	UpdatePositions();
 	Draw(img);
+	timer.stop();
+	std::cout << "Micro seconds: " << timer.getTimeMicro() << "\n";
 }
 void WaveSource::UpdatePositions() {
 	_position.x += -_cameraSpeed.x + _sourceSpeed.x;
@@ -226,6 +234,7 @@ void WaveSource::SpawnWave() {
 		
 		std::vector<cv::Scalar>* lightColor = new std::vector<cv::Scalar>();
 		if (_lightWave) {
+
 			for (int i = 0; i < particlesPerWave; i++) {
 
 				float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
@@ -234,8 +243,8 @@ void WaveSource::SpawnWave() {
 				if (wavelength < 380) {
 					wavelength = 380;
 				}
-				if (wavelength > 780) {
-					wavelength = 780;
+				if (wavelength > 779) {
+					wavelength = 779;
 				}
 				cv::Scalar rgb = wavelengthMap->at(round(wavelength));
 				lightColor->push_back(rgb);
