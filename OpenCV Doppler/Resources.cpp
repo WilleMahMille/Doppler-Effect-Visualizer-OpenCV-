@@ -11,10 +11,10 @@ cv::Mat Resources::LoadImg(const char* imgName) {
 	cv::String workingDir = GetWorkingDir() + "\\";
 	cv::Mat img = cv::imread(workingDir + imgName);
 	if (img.empty()) {
-		img = cv::imread(workingDir + "..\\x64\\Debug\\" + imgName);
+		img = cv::imread(workingDir + "..\\x64\\Debug\\" + imgName, CV_8UC4);
 		if (img.empty()) {
 			std::cout << "Image does not exist\n";
-			img = cv::Mat::zeros(cv::Size(1, 1), CV_8UC3);
+			img = cv::Mat::zeros(cv::Size(1, 1), CV_8UC4);
 		}
 	}
 	return img;
@@ -86,14 +86,11 @@ float Resources::GetWavelengthFromVelocity(std::pair<float, float> deltaPosition
 	//still incorrect,  but probably less incorrect
 	
 	float vFinalX = deltaPosition.first * velocity.x;
-	float vFinalY = deltaPosition.second * velocity.y;
+	float vFinalY = -deltaPosition.second * velocity.y;
 
 	float relativeVelocity = vFinalX + vFinalY;
 	
 	relativeVelocity *= multiplier;
-	if (velocity.x != velocity.y && velocity.x != 0) {
-		std::cout << "movement detected\n";
-	}
 	float wavelength = standardWavelength * sqrt((1 - relativeVelocity / c) / (1 + relativeVelocity / c));
 	//I believe the problem is the wavelength equation
 

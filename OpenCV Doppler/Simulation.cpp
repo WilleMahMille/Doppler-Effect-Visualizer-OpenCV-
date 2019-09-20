@@ -74,24 +74,24 @@ bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 }
 
 
-Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), waveSize(size), _lightColor(lightColor) {
+Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int *particlesPerWave, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), _particlesPerWave(particlesPerWave), waveSize(size), _lightColor(lightColor) {
 	
 	light = lightColor != nullptr;
 	if (light) {
-		if (particlesPerWave != lightColor->size()) {
+		if (*particlesPerWave != lightColor->size()) {
 			std::cout << "Error, lightColor size does equal 360\n";
 		}
 	}
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
 
 }
-Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
-	if (particlesPerWave != particles->size()) {
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, int *particlesPerWave, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), _particlesPerWave(particlesPerWave), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
+	if (*particlesPerWave != particles->size()) {
 		std::cout << "Error, particles size does not match ParticlesPerWave\n";
 	}
 	light = lightColor != nullptr;
 	if (light) {
-		if (particlesPerWave != lightColor->size()) {
+		if (*particlesPerWave != lightColor->size()) {
 			std::cout << "Error, lightColor size does not match particlesPerWave\n";
 		}
 	}
@@ -139,8 +139,8 @@ void Wave::Draw(cv::Mat img) {
 	}
 	else {
 		if (light) {
-			float angleStep = 360 / static_cast<float>(particlesPerWave);
-			for (int i = 0; i < particlesPerWave; i++) {
+			float angleStep = 360 / static_cast<float>(*_particlesPerWave);
+			for (int i = 0; i < *_particlesPerWave; i++) {
 				cv::ellipse(img, _position, cv::Size(_size, _size), 0, i * angleStep, (i + 1) * angleStep, (*_lightColor)[i], waveSize);
 			}
 			
@@ -154,7 +154,6 @@ void Wave::Draw(cv::Mat img) {
 
 
 WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
-	hitboxes.push_back(new Hitbox(std::pair<float, float>(600, 600), std::pair<float, float>(50, 50)));
 	wavelengthMap = Resources::GetWavelengthToRgbMap(2);
 
 	for (int i = 0; i < particlesPerWave; i++) {
@@ -167,27 +166,21 @@ void WaveSource::SetWaveSizeIncrease(int newIncrease) {
 		waves[i]->SetSizeIncrease(newIncrease);
 	}
 }
-void WaveSource::Frame(cv::Mat img) {
-
-	cv::TickMeter timer = cv::TickMeter();
-	timer.start();
+void WaveSource::Frame() {
 
 	SpawnWave();
 	UpdateLifetime();
 	UpdatePositions();
-	Draw(img);
-	timer.stop();
-	std::cout << "Micro seconds: " << timer.getTimeMicro() << "\n";
 }
 void WaveSource::UpdatePositions() {
 	_position.x += -_cameraSpeed.x + _sourceSpeed.x;
-	_position.y += -_cameraSpeed.y - _sourceSpeed.y; //reverse y to create a mathematically logical coordinate system (pos y is up and pos x is right)
+	_position.y += _cameraSpeed.y -_sourceSpeed.y; //reverse y to create a mathematically logical coordinate system (pos y is up and pos x is right)
 	_position.x = _position.x < 0 ? 0 : _position.x;
 	_position.x = _position.x > _screenSize.x ? _screenSize.x : _position.x;
 	_position.y = _position.y < 0 ? 0 : _position.y;
 	_position.y = _position.y > _screenSize.y ? _screenSize.y : _position.y;
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i]->SetSpeed(-_cameraSpeed);
+		waves[i]->SetSpeed(cv::Point(-_cameraSpeed.x, _cameraSpeed.y));
 		waves[i]->Frame(&hitboxes);
 	}
 }
@@ -260,15 +253,15 @@ void WaveSource::SpawnWave() {
 					waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
 				}
 			}
-			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, waveParticles, 5));
+			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, &particlesPerWave, waveParticles, 5));
 			waveParticles = nullptr; 
 		}
 		else {
 			if (!_lightWave) {
-				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime));
+				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, &particlesPerWave));
 			}
 			else {
-				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, 3, lightColor));
+				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, &particlesPerWave, 3, lightColor));
 
 			}
 		}
@@ -316,7 +309,7 @@ void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* r
 
 
 WaveSimulation::WaveSimulation() {
-	_img = cv::Mat::zeros(cv::Size(windowWidth, windowHeight), CV_8UC3);
+	_img = cv::Mat::zeros(cv::Size(windowWidth, windowHeight), CV_8UC4);
 	cv::namedWindow("Doppler effect", cv::WINDOW_FULLSCREEN);
 	cv::resizeWindow("Doppler effect", cv::Size(windowWidth, windowHeight));
 
@@ -333,47 +326,58 @@ WaveSimulation::WaveSimulation() {
 	cv::putText(controlPanelDesign, "Lock X", cv::Point(25, 65), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "Lock Y", cv::Point(125, 65), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
 	cv::putText(controlPanelDesign, "To Center", cv::Point(225, 65), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
-	cv::putText(controlPanelDesign, "Wave speed", cv::Point(15, 520), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
-	cv::putText(controlPanelDesign, "Current:", cv::Point(250, 520), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
-	cv::putText(controlPanelDesign, "Wave Frequency", cv::Point(15, 620), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
-	cv::putText(controlPanelDesign, "ms:", cv::Point(290, 620), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
-	cv::putText(controlPanelDesign, "Wave lifetime", cv::Point(15, 715), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
-	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 715), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Lock Camera", cv::Point(25, 85), cv::FONT_HERSHEY_PLAIN, 1, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Wave speed", cv::Point(15, 490), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "Current:", cv::Point(250, 490), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Wave Frequency", cv::Point(15, 575), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "ms:", cv::Point(290, 575), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+	cv::putText(controlPanelDesign, "Wave lifetime", cv::Point(15, 660), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 660), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
+
+	cv::putText(controlPanelDesign, "Pause:", cv::Point(15, 760), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 	cv::putText(controlPanelDesign, "Simulate Particles:", cv::Point(15, 810), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 
 	//adding userinput elements
 	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-10, -10), cv::Point(10, 10), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
-	Trackbar *waveSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 530), cv::Point(350, 50), 0, 10, ctrlP->GetTopLayer(), &ws->_waveSpeed);
-	Trackbar *waveFrequencyTB = ctrlP->AddTrackbar(cv::Point(25, 630), cv::Point(350, 50), 100, 7500, ctrlP->GetTopLayer(), &ws->_waveFrequency);
-	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 725), cv::Point(350, 50), 100, 5000, ctrlP->GetTopLayer(), &ws->_waveLifetime);
+	Trackbar *waveSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 500), cv::Point(350, 50), 0, 10, ctrlP->GetTopLayer(), &ws->_waveSpeed);
+	Trackbar *waveFrequencyTB = ctrlP->AddTrackbar(cv::Point(25, 585), cv::Point(350, 50), 100, 7500, ctrlP->GetTopLayer(), &ws->_waveFrequency);
+	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 670), cv::Point(350, 50), 100, 5000, ctrlP->GetTopLayer(), &ws->_waveLifetime);
 
 	ctrlP->AddCheckBox(cv::Point(87, 52), ctrlP->GetTopLayer(), tdtb->GetLockX(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(187, 52), ctrlP->GetTopLayer(), tdtb->GetLockY(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(317, 52), ctrlP->GetTopLayer(), tdtb->GetToCenter(), cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(142, 72), ctrlP->GetTopLayer(), &lockCamera, cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(135, 735), ctrlP->GetTopLayer(), &pause, cv::Point(30, 30));
 	ctrlP->AddCheckBox(cv::Point(335, 785), ctrlP->GetTopLayer(), &ws->_particleWave, cv::Point(30, 30));
 
 	//adding dynamic texts
 	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValOne(), cv::Point(260, 35), 1.2));
 	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValTwo(), cv::Point(320, 35), 1.2));
-	ctrlP->AddDynamicText(new DynamicText<int>(waveSpeedTB->GetValue(), cv::Point(340, 520), 1.2));
-	ctrlP->AddDynamicText(new DynamicText<int>(waveFrequencyTB->GetValue(), cv::Point(330, 620), 1.2));
-	ctrlP->AddDynamicText(new DynamicText<int>(waveLifetimeTB->GetValue(), cv::Point(320, 715), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(waveSpeedTB->GetValue(), cv::Point(340, 490), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(waveFrequencyTB->GetValue(), cv::Point(330, 575), 1.2));
+	ctrlP->AddDynamicText(new DynamicText<int>(waveLifetimeTB->GetValue(), cv::Point(320, 660), 1.2));
 	
 	//showing the controlpanel
 	ctrlP->Draw();
 }
-void WaveSimulation::SetCameraSpeed(cv::Point speed) {
-	ws->SetCameraSpeed(speed);
-}
+
 void WaveSimulation::RunSimulation() {
 	for (;;) {
-		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC3);
-		ws->Frame(_img);
+		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC4);
+		if (!pause) {
+			ws->LockCamera(lockCamera);
+			ws->Frame();
+		}
+		ws->Draw(_img);
 		ctrlP->Draw();
 		cv::imshow("Doppler effect", _img);
 		int temp = cv::waitKey(30);
+		
 		if (temp == 27) {
 			break;
+		}
+		if (temp == 32) {
+			pause = !pause;
 		}
 
 	}

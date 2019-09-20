@@ -11,11 +11,11 @@ void OnMouseClick(int evnt, int x, int y, int flags, void* userData) {
 }
 
 CheckBox::CheckBox(cv::Point position, cv::Point size, bool* value) : _position(position), _size(size), _value(value) {
-	_checkedImg = cv::Mat::zeros(size, CV_8UC3);
+	_checkedImg = cv::Mat::zeros(size, CV_8UC4);
 	cv::resize(Resources::LoadImg("checked.png"), _checkedImg, size);
 	//cv::Mat insetImg(img, cv::Rect(_position.x, _position.y, _position.x + _size.x, _position.y + _size.y));
 	
-	_uncheckedImg = cv::Mat::zeros(size, CV_8UC3);
+	_uncheckedImg = cv::Mat::zeros(size, CV_8UC4);
 	cv::resize(Resources::LoadImg("unchecked.png"), _uncheckedImg, size);
 }
 bool CheckBox::IsClicked(cv::Point click, int type) {
@@ -40,7 +40,7 @@ void CheckBox::Click(cv::Point position, int type, int flag) {
 
 TwoDTrackbar::TwoDTrackbar(cv::Point position, cv::Point size, cv::Point bottomNumber, cv::Point topNumber, int* valOne, int* valTwo) : _position(position), _size(size), _bottomNumber(bottomNumber), _topNumber(topNumber), _valOne(valOne), _valTwo(valTwo) {
 	_scale = std::pair<double, double>(static_cast<double>(size.x) / (topNumber.x - bottomNumber.x), static_cast<double>(size.y) / (topNumber.y - bottomNumber.y));
-	trackbarImg = cv::Mat::zeros(size, CV_8UC3);
+	trackbarImg = cv::Mat::zeros(size, CV_8UC4);
 	
 	cv::Point gradLinePos = cv::Point(bottomNumber.x >= 0 ? 10 : (topNumber.x < 0 ? size.x - 10 : static_cast<int>(size.x - _scale.first * topNumber.x)), bottomNumber.y >= 0 ? size.y - 10 : (topNumber.y < 0 ? 10 : static_cast<int>(_scale.second * topNumber.y)));
 
@@ -83,7 +83,7 @@ void TwoDTrackbar::Draw(cv::Mat img) {
 
 Trackbar::Trackbar(cv::Point position, cv::Point size, int botNumber, int topNumber, int* value) : _position(position), _size(size), _botNumber(botNumber), _topNumber(topNumber), _value(value){
 	_scale = size.x / static_cast<double>(topNumber - botNumber);
-	trackbarImg = cv::Mat::zeros(size, CV_8UC3);
+	trackbarImg = cv::Mat::zeros(size, CV_8UC4);
 
 	int gradLinePos = size.y / 2;
 	cv::line(trackbarImg, cv::Point(0, gradLinePos), cv::Point(size.x, gradLinePos), cv::Scalar(255, 255, 255));
@@ -119,8 +119,8 @@ void Trackbar::Draw(cv::Mat img) {
 
 ControlPanel::ControlPanel(const char* windowName, cv::Size size, cv::Point position, cv::Mat showImg) : _windowName(windowName), _size(size), _position(position), _showImg(showImg) {
 	
-	_design = cv::Mat::zeros(size, CV_8UC3);
-	_img = cv::Mat::zeros(size, CV_8UC3);
+	_design = cv::Mat::zeros(size, CV_8UC4);
+	_img = cv::Mat::zeros(size, CV_8UC4);
 	cv::namedWindow(_windowName);
 	cv::setMouseCallback(_windowName, OnMouseClick, reinterpret_cast<void*>(this));
 }

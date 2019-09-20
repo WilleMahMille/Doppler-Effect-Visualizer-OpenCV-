@@ -9,7 +9,7 @@
 constexpr int windowWidth = 1920; //screenwidth
 constexpr int windowHeight = 1020; //screenheight - 60 (windows taskbar)
 constexpr int controlPanelWidth = 400; //400 is standard
-constexpr int particlesPerWave = 6;
+//constexpr int particlesPerWave = 60;
 constexpr float pi = static_cast<float>(3.14159265358979323846); // pi
 
 class Wave;
@@ -51,8 +51,8 @@ private:
 
 class Wave {
 public:
-	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int size = 3, std::vector<cv::Scalar>* lightColor = nullptr); //wave constructor
-	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, std::vector<WaveParticle*> *particles, int size = 3, std::vector<cv::Scalar>* lightColor = nullptr); //particle wave constructor
+	Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int *particlesPerWave, int size = 3, std::vector<cv::Scalar>* lightColor = nullptr); //wave constructor
+	Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, int *particlesPerWave, std::vector<WaveParticle*> *particles, int size = 3, std::vector<cv::Scalar>* lightColor = nullptr); //particle wave constructor
 	
 	~Wave();
 	void Frame(std::vector<Hitbox*>* hitboxes);
@@ -70,6 +70,7 @@ private:
 	cv::Point _position, _cameraSpeed;
 	int _size = 1, _sizeIncrease, waveSize;
 	int _lifetime;
+	int *_particlesPerWave;
 	bool _particles = false, light = false;
 	std::vector<WaveParticle*>* waveParticles;
 
@@ -85,16 +86,15 @@ public:
 	WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed = cv::Point(0, 0), cv::Point cameraSpeed = cv::Point(0, 0), int wavedelay = 1000, int waveLifetime = 3000);
 
 	inline void SetSourceSpeed(cv::Point sourceSpeed) { _sourceSpeed = sourceSpeed; }
-	inline void SetCameraSpeed(cv::Point cameraSpeed) { _cameraSpeed = cameraSpeed; }
+	inline void LockCamera(bool lockCamera) { _cameraSpeed = lockCamera ? _sourceSpeed : cv::Point(0, 0); }
 	void SetWaveSizeIncrease(int newIncrease);
-	void Frame(cv::Mat img);
-
+	void Frame();
+	void Draw(cv::Mat img);
 private:
 
 	void UpdatePositions();
 	void UpdateLifetime();
 	void SpawnWave();
-	void Draw(cv::Mat img);
 	void UpdateWaveSpeed() { _waveSpeed = _waveSpeed > 0 ? _waveSpeed : 1; }
 	void AddHitbox(cv::Point position, cv::Point size);
 
@@ -103,6 +103,7 @@ private:
 	cv::Point _position, _sourceSpeed, _cameraSpeed;
 	cv::Point _screenSize;
 	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
+	int particlesPerWave = 360;
 
 	bool _particleWave = false, _lightWave = true;
 
@@ -118,10 +119,10 @@ class WaveSimulation {
 public:
 	WaveSimulation();
 	
-	void SetCameraSpeed(cv::Point speed);
 	void RunSimulation();
 
 private:
+	bool lockCamera = false, pause = false;
 	cv::Mat _img;
 	ControlPanel* ctrlP;
 	WaveSource* ws;

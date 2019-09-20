@@ -8,7 +8,7 @@
 #include <opencv2/highgui.hpp>
 constexpr float standardWavelength = 550;
 constexpr float c = 299792458;
-constexpr float multiplier = c / 50;
+constexpr float multiplier = c / 10;
 
 inline std::pair<float, float> operator *(std::pair<float, float> p, int i) {
 	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
