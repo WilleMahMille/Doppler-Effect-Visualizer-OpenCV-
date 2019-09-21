@@ -1,11 +1,13 @@
 #include "Resources.h"
-
+#include "Simulation.h"
 
 std::string Resources::GetWorkingDir() {
 	char buf[256];
 	GetCurrentDirectoryA(256, buf);
 	return std::string(buf);
 }
+
+
 
 cv::Mat Resources::LoadImg(const char* imgName) {
 	cv::String workingDir = GetWorkingDir() + "\\";
@@ -96,3 +98,11 @@ float Resources::GetWavelengthFromVelocity(std::pair<float, float> deltaPosition
 
 	return wavelength;
 }
+
+void Resources::DrawWaves(cv::Mat img, std::vector<Wave*>* waves) {
+	for (int i = 0; i < waves->size(); i++) {
+		(*waves)[i]->Draw(img);
+	}
+	delete waves;
+}
+

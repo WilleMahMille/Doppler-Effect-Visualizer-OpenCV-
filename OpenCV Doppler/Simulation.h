@@ -11,6 +11,7 @@ constexpr int windowHeight = 1020; //screenheight - 60 (windows taskbar)
 constexpr int controlPanelWidth = 400; //400 is standard
 //constexpr int particlesPerWave = 60;
 constexpr float pi = static_cast<float>(3.14159265358979323846); // pi
+constexpr int amtOfThreads = 8;
 
 class Wave;
 
@@ -72,6 +73,7 @@ private:
 	int _lifetime;
 	int *_particlesPerWave;
 	bool _particles = false, light = false;
+	float angleStep;
 	std::vector<WaveParticle*>* waveParticles;
 
 	void IncreaseSize() { _size += _sizeIncrease; }

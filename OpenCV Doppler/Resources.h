@@ -6,9 +6,14 @@
 #include <map>
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
+#include <thread>
+
+
 constexpr float standardWavelength = 550;
 constexpr float c = 299792458;
 constexpr float multiplier = c / 10;
+
 
 inline std::pair<float, float> operator *(std::pair<float, float> p, int i) {
 	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
@@ -20,6 +25,8 @@ inline void operator +=(std::pair<float, float> &p1, std::pair<float, float> p2)
 	p1 = std::pair<float, float>(p1.first + p2.first, p1.second + p2.second);
 }
 
+class Wave;
+
 struct Resources {
 public:
 	static std::string GetWorkingDir();
@@ -30,5 +37,7 @@ public:
 	//accuracy, how many colors per nm in wavelength, accuracy of 2 means 2 colors per nm, 1 per 0.5nm
 	static cv::Scalar GetRgbFromWavelength(float wavelength);
 	static float GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity); //position required
+
+	static void DrawWaves(cv::Mat img, std::vector<Wave*>* waves);
 
 };

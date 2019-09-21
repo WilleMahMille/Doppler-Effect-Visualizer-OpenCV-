@@ -83,6 +83,7 @@ Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int life
 		}
 	}
 	_sizeIncrease = sizeIncrease > 0 ? sizeIncrease : 1;
+	angleStep = 360 / static_cast<float>(*_particlesPerWave);
 
 }
 Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, int *particlesPerWave, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), _particlesPerWave(particlesPerWave), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
@@ -139,7 +140,6 @@ void Wave::Draw(cv::Mat img) {
 	}
 	else {
 		if (light) {
-			float angleStep = 360 / static_cast<float>(*_particlesPerWave);
 			for (int i = 0; i < *_particlesPerWave; i++) {
 				cv::ellipse(img, _position, cv::Size(_size, _size), 0, i * angleStep, (i + 1) * angleStep, (*_lightColor)[i], waveSize);
 			}
@@ -281,9 +281,45 @@ void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
 	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
 	
-	for (Wave *wave : waves) {
-		wave->Draw(img);
+	cv::TickMeter timer;
+	timer.start();
+
+	std::vector<std::thread> drawThreads;
+	std::vector<Wave*> *wavePackage = new std::vector<Wave*>();
+	
+	int wavesPerThread = waves.size() > 9 ? 4 : 3;
+
+	for (int i = 0; i < waves.size(); i++) {
+		wavePackage->push_back(waves[i]);
+		if (i % wavesPerThread == wavesPerThread - 1) {
+			drawThreads.push_back(std::thread::thread(Resources::DrawWaves, img, wavePackage));
+			wavePackage = new std::vector<Wave*>();
+		}
+		//waves[i]->Draw(img);
 	}
+	if (waves.size() - 1 % wavesPerThread != wavesPerThread - 1) {
+		drawThreads.push_back(std::thread::thread(Resources::DrawWaves, img, wavePackage));
+	}
+
+	for (int i = 0; i < drawThreads.size(); i++) {
+		drawThreads[i].join();
+	}
+	timer.stop();
+	std::cout << "draw function: " << timer.getTimeMilli() << "ms\n"; 
+	//for (Wave *wave : waves) {
+	//	//drawThreads.push_back(std::thread::thread(&Wave::Draw, wave, img));
+	//	wave->Draw(img);
+	//}
+	
+	//for (int i = 0; i < drawThreads.size(); i++) {
+	//	drawThreads[i].join();
+	//}
+
+
+	//previous time: 6ms / wave, 
+	//first update: roughly 14ms for several waves, but goes over 25 at 5 waves
+	//second update: roughly 10-11 ms per wave, now deprecated
+
 	for (Hitbox* h : hitboxes) {
 		h->Draw(img);
 	}
