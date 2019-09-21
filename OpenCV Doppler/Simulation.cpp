@@ -280,8 +280,9 @@ void WaveSource::SpawnWave() {
 void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
 	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
-	for (int i = 0; i < waves.size(); i++) {
-		waves[i]->Draw(img);
+	
+	for (Wave *wave : waves) {
+		wave->Draw(img);
 	}
 	for (Hitbox* h : hitboxes) {
 		h->Draw(img);
@@ -362,16 +363,32 @@ WaveSimulation::WaveSimulation() {
 }
 
 void WaveSimulation::RunSimulation() {
+	cv::TickMeter frameTimer;
+	cv::TickMeter lagTimer;
 	for (;;) {
+		frameTimer.start();
 		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC4);
 		if (!pause) {
 			ws->LockCamera(lockCamera);
 			ws->Frame();
 		}
-		ws->Draw(_img);
+
+		lagTimer.start();
+		ws->Draw(_img); //this is creating lag, probably because of all the angles that need to be written, averaging on 10 ms per currently existing wave
+		lagTimer.stop();
+		//std::cout << "lagtimer, milliseconds: " << lagTimer.getTimeMilli() << "\n";
+		lagTimer.reset();
+
 		ctrlP->Draw();
+
 		cv::imshow("Doppler effect", _img);
-		int temp = cv::waitKey(30);
+		//supposed to smooth the framerate, but since the ws->draw() is unoptimized, it doesn't do anything
+		frameTimer.stop();
+		int timer = frameTimer.getTimeMilli();
+		int frameDelay = timer >= 25 ? 25 : 30 - timer;
+		int temp = cv::waitKey(frameDelay);
+		
+		frameTimer.reset();
 		
 		if (temp == 27) {
 			break;
