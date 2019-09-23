@@ -405,23 +405,15 @@ void WaveSimulation::RunSimulation() {
 			ws->LockCamera(lockCamera);
 			ws->Frame();
 		}
-
-		lagTimer.start();
-		ws->Draw(_img); //this is creating lag, probably because of all the angles that need to be written, averaging on 10 ms per currently existing wave
-		lagTimer.stop();
-		//std::cout << "lagtimer, milliseconds: " << lagTimer.getTimeMilli() << "\n";
-		lagTimer.reset();
-
+		ws->Draw(_img); 
 		ctrlP->Draw();
 
 		cv::imshow("Doppler effect", _img);
-		//supposed to smooth the framerate, but since the ws->draw() is unoptimized, it doesn't do anything
 		frameTimer.stop();
+		//supposed to smooth the framerate
 		int timer = frameTimer.getTimeMilli();
 		int frameDelay = timer >= 25 ? 5 : 30 - timer;
-		std::cout << frameDelay << "\n";
 		int temp = cv::waitKey(frameDelay);
-		
 		frameTimer.reset();
 		
 		if (temp == 27) {
