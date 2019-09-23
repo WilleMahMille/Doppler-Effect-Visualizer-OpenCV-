@@ -42,6 +42,7 @@ private:
 	void SetPosition(std::pair<float, float> pos) { _position = pos; }
 	void SetSize(int size) { waveSize = size; }
 	void SetColor(cv::Scalar color) { _color = color; }
+	void SetCameraSpeed(cv::Point cameraSpeed) { _cameraSpeed = cameraSpeed; }
 
 	cv::Scalar _color;
 	cv::Point _cameraSpeed;
@@ -77,7 +78,7 @@ private:
 	std::vector<WaveParticle*>* waveParticles;
 
 	void IncreaseSize() { _size += _sizeIncrease; }
-	void UpdateSize() { _position += _cameraSpeed; }
+	void UpdatePosition();
 
 	std::vector<cv::Scalar>* _lightColor;
 };
@@ -102,10 +103,11 @@ private:
 
 	const int FrameDelay = 30;
 	const cv::Scalar WaveSourceColor = cv::Scalar(200, 29, 0);
+
 	cv::Point _position, _sourceSpeed, _cameraSpeed;
 	cv::Point _screenSize;
 	int _waveFrequency, currentWaveDelay = 0, _waveLifetime, _waveSpeed = 5;
-	int particlesPerWave = 360;
+	int particlesPerWave = 200;
 
 	bool _particleWave = false, _lightWave = true;
 

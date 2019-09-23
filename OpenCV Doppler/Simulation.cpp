@@ -18,6 +18,7 @@ void WaveParticle::Draw(cv::Mat img) {
 }
 void WaveParticle::UpdatePosition() { 
 	_position += _velocity;
+	_position += Resources::PointToPair(_cameraSpeed);
 }
 void WaveParticle::Collide(Hitbox *hitbox) {
 	if (CollidingWith(hitbox)) {
@@ -118,18 +119,22 @@ Wave::~Wave() {
 	}
 	delete WaveColor;
 }
+void Wave::UpdatePosition() {
+	_position += _cameraSpeed;
+}
 void Wave::Frame(std::vector<Hitbox*>* hitboxes) {
 	if (_particles) {
 		for (WaveParticle *wp : *waveParticles) {
 			for (Hitbox* h : *hitboxes) {
 				wp->Collide(h);
 			}
+			wp->SetCameraSpeed(_cameraSpeed);
 			wp->UpdatePosition();
 		}
 	}
 	else {
 		IncreaseSize();
-		UpdateSize();
+		UpdatePosition();
 	}
 }
 void Wave::Draw(cv::Mat img) {
@@ -155,7 +160,7 @@ void Wave::Draw(cv::Mat img) {
 
 WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
 	wavelengthMap = Resources::GetWavelengthToRgbMap(2);
-
+	//Resources::SetMultiplier(lightMultiplier);
 	for (int i = 0; i < particlesPerWave; i++) {
 		float rad = 2 * pi * i / particlesPerWave;
 		particleVelocities.push_back(std::make_pair<float, float>(cos(rad), sin(rad)));
@@ -280,12 +285,12 @@ void WaveSource::SpawnWave() {
 void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
 	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
-	
+	Resources::multiplier = c / (2 * _waveSpeed);
 
 	std::vector<std::thread> drawThreads;
 	std::vector<Wave*> *wavePackage = new std::vector<Wave*>();
 	
-	int wavesPerThread = 2;// waves.size() > 9 ? 4 : 3;
+	int wavesPerThread = 2; //waves.size() > 9 ? 4 : 3;
 
 	for (int i = 0; i < waves.size(); i++) {
 		wavePackage->push_back(waves[i]);
@@ -368,8 +373,9 @@ WaveSimulation::WaveSimulation() {
 	cv::putText(controlPanelDesign, "Wave lifetime", cv::Point(15, 660), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 660), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
 
-	cv::putText(controlPanelDesign, "Pause:", cv::Point(15, 760), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
-	cv::putText(controlPanelDesign, "Simulate Particles:", cv::Point(15, 810), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "Pause:", cv::Point(15, 760), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Simulate Particles:", cv::Point(15, 790), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Simulate Light:", cv::Point(15, 820), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
 
 	//adding userinput elements
 	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-10, -10), cv::Point(10, 10), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
@@ -382,7 +388,9 @@ WaveSimulation::WaveSimulation() {
 	ctrlP->AddCheckBox(cv::Point(317, 52), ctrlP->GetTopLayer(), tdtb->GetToCenter(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(142, 72), ctrlP->GetTopLayer(), &lockCamera, cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(135, 735), ctrlP->GetTopLayer(), &pause, cv::Point(30, 30));
-	ctrlP->AddCheckBox(cv::Point(335, 785), ctrlP->GetTopLayer(), &ws->_particleWave, cv::Point(30, 30));
+	ctrlP->AddCheckBox(cv::Point(207, 777), ctrlP->GetTopLayer(), &ws->_particleWave, cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(167, 807), ctrlP->GetTopLayer(), &ws->_lightWave, cv::Point(15, 15));
+
 
 	//adding dynamic texts
 	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValOne(), cv::Point(260, 35), 1.2));
@@ -397,7 +405,6 @@ WaveSimulation::WaveSimulation() {
 
 void WaveSimulation::RunSimulation() {
 	cv::TickMeter frameTimer;
-	cv::TickMeter lagTimer;
 	for (;;) {
 		frameTimer.start();
 		_img = cv::Mat::zeros(cv::Point(windowWidth, windowHeight), CV_8UC4);
@@ -405,7 +412,7 @@ void WaveSimulation::RunSimulation() {
 			ws->LockCamera(lockCamera);
 			ws->Frame();
 		}
-		ws->Draw(_img); 
+		ws->Draw(_img);
 		ctrlP->Draw();
 
 		cv::imshow("Doppler effect", _img);

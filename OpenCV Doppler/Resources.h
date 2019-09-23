@@ -10,9 +10,8 @@
 #include <thread>
 
 
-constexpr float standardWavelength = 550;
-constexpr float c = 299792458;
-constexpr float multiplier = c / 10;
+constexpr float standardWavelength = 550.0;
+constexpr float c = 299792458.0;
 
 
 inline std::pair<float, float> operator *(std::pair<float, float> p, int i) {
@@ -29,6 +28,7 @@ class Wave;
 
 struct Resources {
 public:
+	
 	static std::string GetWorkingDir();
 	static cv::Mat LoadImg(const char* imgName);
 	static std::pair<float, float> PointToPair(cv::Point point);
@@ -39,5 +39,8 @@ public:
 	static float GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity); //position required
 
 	static void DrawWaves(cv::Mat img, std::vector<Wave*>* waves);
+	
+	static float multiplier;
 
 };
+

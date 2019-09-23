@@ -1,5 +1,6 @@
 #include "Resources.h"
 #include "Simulation.h"
+	
 
 std::string Resources::GetWorkingDir() {
 	char buf[256];
@@ -8,6 +9,7 @@ std::string Resources::GetWorkingDir() {
 }
 
 
+float Resources::multiplier;
 
 cv::Mat Resources::LoadImg(const char* imgName) {
 	cv::String workingDir = GetWorkingDir() + "\\";
@@ -83,19 +85,16 @@ cv::Point Resources::PairToPoint(std::pair<float, float> pair) {
 	return cv::Point(static_cast<int>(pair.first), static_cast<int>(pair.second));
 }
 
+
+
 float Resources::GetWavelengthFromVelocity(std::pair<float, float> deltaPosition, cv::Point velocity) {
-	//needs a different implementation
-	//still incorrect,  but probably less incorrect
 	
 	float vFinalX = deltaPosition.first * velocity.x;
 	float vFinalY = -deltaPosition.second * velocity.y;
-
 	float relativeVelocity = vFinalX + vFinalY;
 	
 	relativeVelocity *= multiplier;
-	float wavelength = standardWavelength * sqrt((1 - relativeVelocity / c) / (1 + relativeVelocity / c));
-	//I believe the problem is the wavelength equation
-
+	float wavelength = standardWavelength * sqrt((1 - relativeVelocity / c) / (1 + relativeVelocity / c));	
 	return wavelength;
 }
 
