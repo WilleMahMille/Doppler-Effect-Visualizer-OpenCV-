@@ -281,13 +281,11 @@ void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
 	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
 	
-	cv::TickMeter timer;
-	timer.start();
 
 	std::vector<std::thread> drawThreads;
 	std::vector<Wave*> *wavePackage = new std::vector<Wave*>();
 	
-	int wavesPerThread = waves.size() > 9 ? 4 : 3;
+	int wavesPerThread = 2;// waves.size() > 9 ? 4 : 3;
 
 	for (int i = 0; i < waves.size(); i++) {
 		wavePackage->push_back(waves[i]);
@@ -297,15 +295,14 @@ void WaveSource::Draw(cv::Mat img) {
 		}
 		//waves[i]->Draw(img);
 	}
-	if (waves.size() - 1 % wavesPerThread != wavesPerThread - 1) {
+	if (wavePackage->size() != 0) {
 		drawThreads.push_back(std::thread::thread(Resources::DrawWaves, img, wavePackage));
 	}
 
 	for (int i = 0; i < drawThreads.size(); i++) {
 		drawThreads[i].join();
 	}
-	timer.stop();
-	std::cout << "draw function: " << timer.getTimeMilli() << "ms\n"; 
+
 	//for (Wave *wave : waves) {
 	//	//drawThreads.push_back(std::thread::thread(&Wave::Draw, wave, img));
 	//	wave->Draw(img);
@@ -421,7 +418,8 @@ void WaveSimulation::RunSimulation() {
 		//supposed to smooth the framerate, but since the ws->draw() is unoptimized, it doesn't do anything
 		frameTimer.stop();
 		int timer = frameTimer.getTimeMilli();
-		int frameDelay = timer >= 25 ? 25 : 30 - timer;
+		int frameDelay = timer >= 25 ? 5 : 30 - timer;
+		std::cout << frameDelay << "\n";
 		int temp = cv::waitKey(frameDelay);
 		
 		frameTimer.reset();
