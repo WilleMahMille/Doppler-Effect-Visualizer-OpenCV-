@@ -7,13 +7,18 @@ void Hitbox::Draw(cv::Mat img) {
 	cv::Point boxSize = Resources::PairToPoint(size);
 	cv::rectangle(img, cv::Rect(pos, pos + boxSize), color, cv::FILLED, cv::LINE_8);
 }
+void Hitbox::UpdateLifetime(int framedelay) {
+	_currentLifetime += framedelay;
+}
 
-WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color) : _position(position), _velocity(velocity), _color(color) {
+
+WaveParticle::WaveParticle(cv::Point cameraSpeed, std::pair<float, float> position, std::pair<float, float> velocity, cv::Scalar color, bool lightParticle)
+	: _position(position), _velocity(velocity), _color(color), _lightParticle(lightParticle) {
 }
 void WaveParticle::Draw(cv::Mat img) {
 	//will crash if size = 0
 	cv::Point pointPos = cv::Point(static_cast<int>(_position.first), static_cast<int>(_position.second));
-	cv::rectangle(img, cv::Rect(pointPos, pointPos + cv::Point(waveSize - 1, waveSize - 1)), cv::Scalar(200, 200, 200), -1);
+	cv::rectangle(img, cv::Rect(pointPos, pointPos + cv::Point(waveSize - 1, waveSize - 1)), _color, -1);
 	//cv::line(img, _position, _position + cv::Point(1, 1), _color);
 }
 void WaveParticle::UpdatePosition() { 
@@ -75,7 +80,8 @@ bool WaveParticle::CollidingWith(Hitbox *hitbox) {
 }
 
 
-Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int *particlesPerWave, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), _particlesPerWave(particlesPerWave), waveSize(size), _lightColor(lightColor) {
+Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int lifetime, int *particlesPerWave, int waveID, int size, std::vector<cv::Scalar>* lightColor) 
+	: _cameraSpeed(cameraSpeed), _position(position),  _lifetime(lifetime), _particlesPerWave(particlesPerWave), _waveID(waveID), waveSize(size), _lightColor(lightColor) {
 	
 	light = lightColor != nullptr;
 	if (light) {
@@ -87,27 +93,30 @@ Wave::Wave(cv::Point cameraSpeed, cv::Point position, int sizeIncrease, int life
 	angleStep = 360 / static_cast<float>(*_particlesPerWave);
 
 }
-Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, int *particlesPerWave, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar>* lightColor) : _cameraSpeed(cameraSpeed), _lifetime(lifetime), _particlesPerWave(particlesPerWave), waveParticles(particles), waveSize(size), _lightColor(lightColor) {
+Wave::Wave(cv::Point cameraSpeed, std::pair<float, float> position, int sizeIncrease, int lifetime, int *particlesPerWave, int waveID, std::vector<WaveParticle*>* particles, int size, std::vector<cv::Scalar>* lightColor) 
+	: _cameraSpeed(cameraSpeed), _lifetime(lifetime), _particlesPerWave(particlesPerWave), waveParticles(particles), _waveID(waveID), waveSize(size), _lightColor(lightColor) {
 	if (*particlesPerWave != particles->size()) {
 		std::cout << "Error, particles size does not match ParticlesPerWave\n";
 	}
 	light = lightColor != nullptr;
-	if (light) {
-		if (*particlesPerWave != lightColor->size()) {
-			std::cout << "Error, lightColor size does not match particlesPerWave\n";
-		}
+	if (light && (*particlesPerWave != lightColor->size())) {
+		std::cout << "Error, lightColor size does not match particlesPerWave\n";
 	}
 
 	_particles = true;
 	if (light) {
 		for (int i = 0; i < particles->size(); i++) {
 			(*particles)[i]->SetColor((*lightColor)[i]);
+			(*particles)[i]->SetID(_waveID);
 		}
 	}
-	for (WaveParticle* p : *particles) {
-		p->MultiplyVelocity(sizeIncrease);
-		p->SetPosition(position);
-		p->SetSize(size);
+	for (int i = 0; i < particles->size(); i++){ 
+		if (light) {
+			(*particles)[i]->SetColor((*lightColor)[i]);
+		}
+		(*particles)[i]->MultiplyVelocity(sizeIncrease);
+		(*particles)[i]->SetPosition(position);
+		(*particles)[i]->SetSize(size);
 	}
 }
 Wave::~Wave() {
@@ -137,6 +146,17 @@ void Wave::Frame(std::vector<Hitbox*>* hitboxes) {
 		UpdatePosition();
 	}
 }
+bool Wave::CollidingWith(Hitbox* hitbox) {
+	if (!_particles) {
+		return false;
+	}
+	for (WaveParticle *wp : (*waveParticles)) {
+		if (wp->CollidingWith(hitbox)) {
+			return true;
+		}
+	}
+	return false;
+}
 void Wave::Draw(cv::Mat img) {
 	if (_particles) {
 		for (WaveParticle *wp : *waveParticles) {
@@ -158,8 +178,13 @@ void Wave::Draw(cv::Mat img) {
 }
 
 
-WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime) : _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize) {
+WaveSource::WaveSource(cv::Point position, cv::Point screenSize, cv::Point sourceSpeed, cv::Point cameraSpeed, int wavedelay, int waveLifetime)
+	: _position(position), _sourceSpeed(sourceSpeed), _cameraSpeed(cameraSpeed), _waveFrequency(wavedelay), _waveLifetime(waveLifetime), _screenSize(screenSize), 
+	sourceHitbox(Resources::PointToPair(position - cv::Point(10, 10)), std::pair<float, float>(0, 0), std::pair<float, float>(21, 21), -1) {
+
+
 	wavelengthMap = Resources::GetWavelengthToRgbMap(2);
+	_currentHitboxTimer = _hitboxFrequency - frameDelay;
 	//Resources::SetMultiplier(lightMultiplier);
 	for (int i = 0; i < particlesPerWave; i++) {
 		float rad = 2 * pi * i / particlesPerWave;
@@ -172,10 +197,12 @@ void WaveSource::SetWaveSizeIncrease(int newIncrease) {
 	}
 }
 void WaveSource::Frame() {
-
+	
 	SpawnWave();
+	SpawnHitbox();
 	UpdateLifetime();
 	UpdatePositions();
+	UpdateFrequency();
 }
 void WaveSource::UpdatePositions() {
 	_position.x += -_cameraSpeed.x + _sourceSpeed.x;
@@ -184,14 +211,20 @@ void WaveSource::UpdatePositions() {
 	_position.x = _position.x > _screenSize.x ? _screenSize.x : _position.x;
 	_position.y = _position.y < 0 ? 0 : _position.y;
 	_position.y = _position.y > _screenSize.y ? _screenSize.y : _position.y;
+	sourceHitbox.position = Resources::PointToPair(_position - cv::Point(10, 10));
+
 	for (int i = 0; i < waves.size(); i++) {
 		waves[i]->SetSpeed(cv::Point(-_cameraSpeed.x, _cameraSpeed.y));
 		waves[i]->Frame(&hitboxes);
 	}
+	for (Hitbox *h : hitboxes) {
+		h->SetVelocity(hitboxVel);
+		h->UpdatePosition();
+	}
 }
 void WaveSource::UpdateLifetime() {
 	for (int i = 0; i < waves.size(); i++) {
-		waves[i]->LifetimeDecrease(FrameDelay);
+		waves[i]->LifetimeDecrease(frameDelay);
 		if (waves[i]->IsDead()) {
 			Wave &tempW = (*waves[i]);
 			waves.erase(waves.begin() + i);
@@ -200,19 +233,48 @@ void WaveSource::UpdateLifetime() {
 		}
 	}
 }
+void WaveSource::UpdateFrequency() {
+	frequency += frameDelay;
+	for (Wave *w : waves) {
+		if (w->CollidingWith(&sourceHitbox) && lastID != w->GetID() && w->GetCurrentLifetime() > 200) {
+			if (lastID != INT_MIN) {
+				lastFrequency = frequency;
+				frequencyText = std::to_string(lastFrequency) + "ms";
+				
+			}
+			frequency = 0;
+			lastID = w->GetID();
+		}
+	}
+}
 void WaveSource::SpawnWave() {
-	currentWaveDelay += FrameDelay;
+	currentWaveDelay += frameDelay;
 
-	
+	std::vector<cv::Scalar>* lightColor = new std::vector<cv::Scalar>();
+	if (_lightWave) {
+		for (int i = 0; i < particlesPerWave; i++) {
 
+			float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
 
+			//const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
+			if (wavelength < 380) {
+				wavelength = 380;
+			}
+			if (wavelength > 779) {
+				wavelength = 779;
+			}
+			cv::Scalar rgb = wavelengthMap->at(round(wavelength));
+			lightColor->push_back(rgb);
+
+		}
+	}
 	if (_particleWave) {
 		if (waveParticles == nullptr) {
 			waveParticles = new std::vector<WaveParticle*>();
 		}
 		int currentParticleVectorSize = static_cast<int>(waveParticles->size());
 		int waveSpawnDelayLeft = currentWaveDelay > _waveFrequency ? 0 : _waveFrequency - currentWaveDelay;
-		float framesLeft = static_cast<float>(waveSpawnDelayLeft) / FrameDelay;
+		float framesLeft = static_cast<float>(waveSpawnDelayLeft) / frameDelay;
 		int wavesLeft = particlesPerWave - currentParticleVectorSize;
 		int wavesThisFrame = static_cast<int>(wavesLeft / ceil(framesLeft));
 		std::pair<float, float> pos = std::pair<float, float>(static_cast<float>(0), static_cast<float>(0));
@@ -227,29 +289,11 @@ void WaveSource::SpawnWave() {
 			waveParticles = nullptr;
 		}
 	}
+
+
 	if (currentWaveDelay >= _waveFrequency) {
 		currentWaveDelay = 0;
 		
-		std::vector<cv::Scalar>* lightColor = new std::vector<cv::Scalar>();
-		if (_lightWave) {
-
-			for (int i = 0; i < particlesPerWave; i++) {
-
-				float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
-
-				//const float wavelength = Resources::GetWavelengthFromVelocity(particleVelocities[i], _sourceSpeed);
-				if (wavelength < 380) {
-					wavelength = 380;
-				}
-				if (wavelength > 779) {
-					wavelength = 779;
-				}
-				cv::Scalar rgb = wavelengthMap->at(round(wavelength));
-				lightColor->push_back(rgb);
-				
-			}
-		}
-
 		if (_particleWave) {
 			if (waveParticles->size() < particlesPerWave) {
 				std::pair<float, float> pos(static_cast<float>(0), static_cast<float>(0));
@@ -258,17 +302,26 @@ void WaveSource::SpawnWave() {
 					waveParticles->push_back(new WaveParticle(_cameraSpeed, pos, particleVelocities[i + currentParticleVectorSize]));
 				}
 			}
-			waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, &particlesPerWave, waveParticles, 5));
-			waveParticles = nullptr; 
+			if (_lightWave) {
+				waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, &particlesPerWave, waveID, waveParticles, 5, lightColor));
+			}
+			else {
+				waves.push_back(new Wave(_cameraSpeed, std::pair<float, float>(static_cast<float>(_position.x), static_cast<float>(_position.y)), _waveSpeed, _waveLifetime, &particlesPerWave, waveID, waveParticles, 5));
+			}
+			waveParticles = nullptr;
 		}
 		else {
 			if (!_lightWave) {
-				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, &particlesPerWave));
+				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, &particlesPerWave, waveID));
 			}
 			else {
-				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, &particlesPerWave, 3, lightColor));
+				waves.push_back(new Wave(cv::Point(0, 0), _position, _waveSpeed, _waveLifetime, &particlesPerWave, waveID, 3, lightColor));
 
 			}
+		}
+		waveID++;
+		if (waveID > 1000) {
+			waveID = 0;
 		}
 		
 		//wave bounces, entertaining concept, but physically incorrect and not used in this program (anymore)
@@ -282,15 +335,26 @@ void WaveSource::SpawnWave() {
 		}*/	
 	}
 }
+void WaveSource::SpawnHitbox() {
+	if (!_hitboxesEnabled) {
+		return;
+	}
+	if (_currentHitboxTimer >= _hitboxFrequency) {
+		_currentHitboxTimer -= _hitboxFrequency;
+		hitboxes.push_back(new Hitbox(std::make_pair<float, float>(static_cast<float>(windowWidth - controlPanelWidth), windowHeight * 2 / static_cast<float>(3)), hitboxVel, std::make_pair<float, float>(75, 75), _hitboxLifetime));
+		std::cout << "adding hitbox\n";
+	}
+	_currentHitboxTimer += frameDelay;
+}
 void WaveSource::Draw(cv::Mat img) {
 	cv::circle(img, _position, 10, WaveSourceColor, 5);
-	//cv::rectangle(img, cv::Point(_position.x - 10, _position.y - 10), cv::Point(_position.x + 10, _position.y + 10), WaveSourceColor, -1);
+	
 	Resources::multiplier = c / (2 * _waveSpeed);
 
 	std::vector<std::thread> drawThreads;
 	std::vector<Wave*> *wavePackage = new std::vector<Wave*>();
 	
-	int wavesPerThread = 2; //waves.size() > 9 ? 4 : 3;
+	int wavesPerThread = 2;
 
 	for (int i = 0; i < waves.size(); i++) {
 		wavePackage->push_back(waves[i]);
@@ -298,7 +362,6 @@ void WaveSource::Draw(cv::Mat img) {
 			drawThreads.push_back(std::thread::thread(Resources::DrawWaves, img, wavePackage));
 			wavePackage = new std::vector<Wave*>();
 		}
-		//waves[i]->Draw(img);
 	}
 	if (wavePackage->size() != 0) {
 		drawThreads.push_back(std::thread::thread(Resources::DrawWaves, img, wavePackage));
@@ -307,43 +370,10 @@ void WaveSource::Draw(cv::Mat img) {
 	for (int i = 0; i < drawThreads.size(); i++) {
 		drawThreads[i].join();
 	}
-
-	//for (Wave *wave : waves) {
-	//	//drawThreads.push_back(std::thread::thread(&Wave::Draw, wave, img));
-	//	wave->Draw(img);
-	//}
-	
-	//for (int i = 0; i < drawThreads.size(); i++) {
-	//	drawThreads[i].join();
-	//}
-
-
-	//previous time: 6ms / wave, 
-	//first update: roughly 14ms for several waves, but goes over 25 at 5 waves
-	//second update: roughly 10-11 ms per wave, now deprecated
-
 	for (Hitbox* h : hitboxes) {
 		h->Draw(img);
 	}
-}
-void WaveSource::AddHitbox(cv::Point position, cv::Point size) {
-	hitboxes.push_back(new Hitbox(Resources::PointToPair(position), Resources::PointToPair(size)));
-}
 
-
-void CreateTrackbars(int* sourceSpeedX, int* reverseX, int* sourceSpeedY, int* reverseY, int* waveDelay, int* waveSpeed, int* waveLifetime) {
-	//old and deprecated (should be removed)
-	const char* commandWindowName = "Control Panel (deprecated)";
-
-	cv::namedWindow(commandWindowName, cv::WINDOW_FREERATIO);
-	cv::resizeWindow(commandWindowName, cv::Size(500, 500));
-	cv::createTrackbar("Source Speed X", commandWindowName, sourceSpeedX, 50);
-	cv::createTrackbar("Reverse X Speed", commandWindowName, reverseX, 1);
-	cv::createTrackbar("Wave Source Speed Y", commandWindowName, sourceSpeedY, 50);
-	cv::createTrackbar("Reverse Y Speed", commandWindowName, reverseY, 1);
-	cv::createTrackbar("Wave Spawn Delay", commandWindowName, waveDelay, 5000);
-	cv::createTrackbar("Wave Speed", commandWindowName, waveSpeed, 75);
-	cv::createTrackbar("Wave Lifetime", commandWindowName, waveLifetime, 10000);
 }
 
 
@@ -354,7 +384,6 @@ WaveSimulation::WaveSimulation() {
 
 	ws = new WaveSource(cv::Point((windowWidth - controlPanelWidth ) / 2, windowHeight / 2), cv::Point(windowWidth - controlPanelWidth, windowHeight));
 	
-	//CreateTrackbars(&ws->_sourceSpeed.x, &ws->reverseX, &ws->_sourceSpeed.y, &ws->reverseY, &ws->_waveFrequency, &ws->_waveSpeed, &ws->_waveLifetime); //old and deprecated (should be removed)
 	ctrlP = new ControlPanel("Doppler effect", cv::Size(controlPanelWidth, windowHeight), cv::Point(windowWidth - controlPanelWidth, 0), _img);
 	
 	//setting the design for controlpanel
@@ -373,24 +402,29 @@ WaveSimulation::WaveSimulation() {
 	cv::putText(controlPanelDesign, "Wave lifetime", cv::Point(15, 660), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255), 2);
 	cv::putText(controlPanelDesign, "ms:", cv::Point(280, 660), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(210, 210, 210));
 
-	cv::putText(controlPanelDesign, "Pause:", cv::Point(15, 760), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 255, 255));
-	cv::putText(controlPanelDesign, "Simulate Particles:", cv::Point(15, 790), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
-	cv::putText(controlPanelDesign, "Simulate Light:", cv::Point(15, 820), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Pause", cv::Point(35, 750), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255), 2);
+	cv::putText(controlPanelDesign, "Simulate Particles", cv::Point(35, 780), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Simulate Light", cv::Point(35, 810), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Collider", cv::Point(35, 840), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Detected Frequency", cv::Point(15, 875), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
+	cv::putText(controlPanelDesign, "Hitbox Velocity:", cv::Point(15, 900), cv::FONT_HERSHEY_PLAIN, 1.2, cv::Scalar(255, 255, 255));
 
 	//adding userinput elements
 	TwoDTrackbar* tdtb = ctrlP->AddTwoDTrackBar(cv::Point(25, 100), cv::Point(350, 350), cv::Point(-10, -10), cv::Point(10, 10), ctrlP->GetTopLayer(), &ws->_sourceSpeed.x, &ws->_sourceSpeed.y);
 	Trackbar *waveSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 500), cv::Point(350, 50), 0, 10, ctrlP->GetTopLayer(), &ws->_waveSpeed);
 	Trackbar *waveFrequencyTB = ctrlP->AddTrackbar(cv::Point(25, 585), cv::Point(350, 50), 100, 7500, ctrlP->GetTopLayer(), &ws->_waveFrequency);
-	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 670), cv::Point(350, 50), 100, 5000, ctrlP->GetTopLayer(), &ws->_waveLifetime);
+	Trackbar *waveLifetimeTB = ctrlP->AddTrackbar(cv::Point(25, 670), cv::Point(350, 50), 100, 7500, ctrlP->GetTopLayer(), &ws->_waveLifetime);
+	Trackbar *hitboxSpeedTB = ctrlP->AddTrackbar(cv::Point(25, 920), cv::Point(350, 50), 0, 5, ctrlP->GetTopLayer(), &ws->hitboxVel.first);
 
 	ctrlP->AddCheckBox(cv::Point(87, 52), ctrlP->GetTopLayer(), tdtb->GetLockX(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(187, 52), ctrlP->GetTopLayer(), tdtb->GetLockY(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(317, 52), ctrlP->GetTopLayer(), tdtb->GetToCenter(), cv::Point(15, 15));
 	ctrlP->AddCheckBox(cv::Point(142, 72), ctrlP->GetTopLayer(), &lockCamera, cv::Point(15, 15));
-	ctrlP->AddCheckBox(cv::Point(135, 735), ctrlP->GetTopLayer(), &pause, cv::Point(30, 30));
-	ctrlP->AddCheckBox(cv::Point(207, 777), ctrlP->GetTopLayer(), &ws->_particleWave, cv::Point(15, 15));
-	ctrlP->AddCheckBox(cv::Point(167, 807), ctrlP->GetTopLayer(), &ws->_lightWave, cv::Point(15, 15));
 
+	ctrlP->AddCheckBox(cv::Point(15, 735), ctrlP->GetTopLayer(), &pause, cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(15, 765), ctrlP->GetTopLayer(), &ws->_particleWave, cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(15, 795), ctrlP->GetTopLayer(), &ws->_lightWave, cv::Point(15, 15));
+	ctrlP->AddCheckBox(cv::Point(15, 825), ctrlP->GetTopLayer(), &ws->_hitboxesEnabled, cv::Point(15, 15));
 
 	//adding dynamic texts
 	ctrlP->AddDynamicText(new DynamicText<int>(tdtb->GetValOne(), cv::Point(260, 35), 1.2));
@@ -398,7 +432,9 @@ WaveSimulation::WaveSimulation() {
 	ctrlP->AddDynamicText(new DynamicText<int>(waveSpeedTB->GetValue(), cv::Point(340, 490), 1.2));
 	ctrlP->AddDynamicText(new DynamicText<int>(waveFrequencyTB->GetValue(), cv::Point(330, 575), 1.2));
 	ctrlP->AddDynamicText(new DynamicText<int>(waveLifetimeTB->GetValue(), cv::Point(320, 660), 1.2));
-	
+	ctrlP->AddDynamicText(new DynamicText<std::string>(&ws->frequencyText, cv::Point(235, 875), 1.2, cv::Scalar(255, 255, 255)));
+	ctrlP->AddDynamicText(new DynamicText<int>(&ws->hitboxVel.first, cv::Point(175, 900), 1.2, cv::Scalar(255, 255, 255)));
+
 	//showing the controlpanel
 	ctrlP->Draw();
 }

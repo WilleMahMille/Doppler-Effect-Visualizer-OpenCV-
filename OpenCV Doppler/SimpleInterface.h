@@ -86,12 +86,30 @@ public:
 			throw(std::invalid_argument("Error, type can't be cast to string"));
 		}
 	}
+	
 private:
 	void Draw(cv::Mat img) {
 		std::string text = std::to_string(*_textVar);
 		cv::putText(img, text, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color, 1);
 	}
+	
 	T* _textVar;
+	cv::Point _position;
+	double _textSize;
+	cv::Scalar _color;
+};
+template<>
+class DynamicText<std::string> : public DynamicTextBase {
+	friend ControlPanel;
+public:
+	DynamicText(std::string* textVar, cv::Point position, double textSize = 1, cv::Scalar color = cv::Scalar(210, 210, 210)) : _textVar(textVar), _position(position), _textSize(textSize), _color(color) {
+	
+	}
+private:
+	void Draw(cv::Mat img) {
+		cv::putText(img, *_textVar, _position, cv::FONT_HERSHEY_PLAIN, _textSize, _color, 1);
+	}
+	std::string* _textVar;
 	cv::Point _position;
 	double _textSize;
 	cv::Scalar _color;

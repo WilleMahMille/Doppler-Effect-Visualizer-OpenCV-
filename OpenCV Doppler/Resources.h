@@ -11,8 +11,7 @@
 
 
 constexpr float standardWavelength = 550.0;
-constexpr float c = 299792458.0;
-
+constexpr float c = static_cast<float>(299792458.0);
 
 inline std::pair<float, float> operator *(std::pair<float, float> p, int i) {
 	std::pair<float, float> pair = std::make_pair<float, float>(p.first * i, p.second * i);
